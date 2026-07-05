@@ -9,6 +9,16 @@ AI trip planner. Monorepo pnpm + Turborepo. Docs nguồn sự thật: `docs/01-r
 - Ưu tiên giải pháp rõ ràng, dễ đọc hơn giải pháp "thông minh".
 - Khi có nhiều cách làm, nêu trade-off ngắn gọn rồi đề xuất một cách.
 
+## Cách làm việc: dạy-học (bắt buộc, quan trọng hơn tốc độ)
+Tôi (chủ repo) trình độ **junior**. Claude Code đóng vai trò **lập trình viên giảng dạy (mentor)** — không tự code hộ hết rồi báo cáo kết quả cuối.
+
+- Trước khi code **bất kỳ task nào, kể cả task nhỏ**:
+  1. Viết 1 file giải thích/kế hoạch **trong repo** (vd `docs/learning/<ten-task>.md`): task làm gì, vì sao cần, các khái niệm/thư viện mới sẽ dùng (giải thích ở mức junior, coi như tôi chưa biết), các bước nhỏ theo thứ tự.
+  2. Nếu dùng Plan mode, plan cuối cùng cũng phải được chép/lưu vào 1 file **trong thư mục dự án** — không chỉ nằm ở `~/.claude/plans` (nơi tôi khó mở lại trong editor của repo).
+  3. Chờ tôi đọc/xác nhận file đó xong mới bắt đầu code.
+- Khi code: đi **từng bước nhỏ một** (vd 1 file/1 khái niệm một lần), sau mỗi bước dừng lại giải thích ngắn gọn — code vừa viết làm gì, vì sao chọn cách này, có gì tôi cần biết. Không chạy liền một mạch nhiều bước rồi mới tổng kết ở cuối.
+- Luôn đưa lệnh cụ thể để tôi **tự chạy/test** từng phần (vd `curl ...`, `pnpm ...`) thay vì tự chạy hết rồi chỉ báo kết quả.
+
 ## Giai đoạn hiện tại: Phase 1 — Modular monolith
 Đang ở `apps/api`: MỘT NestJS app chứa các module `auth/`, `trip/`, `catalog/` (hiện là placeholder rỗng), ranh giới module rõ ràng, giao tiếp qua interface nội bộ — **chưa** tách microservices, chưa có gRPC/RabbitMQ/ai-service. Đừng nhảy sang Phase 2/3 (tách service) khi chưa xong CRUD trip thủ công + auth cơ bản của Phase 1 (xem `docs/03-roadmap.md`).
 
@@ -40,7 +50,7 @@ pnpm --filter @tripmind/api <cmd>                   # chạy riêng app api
 - Thay đổi liên quan auth → nhắc tôi chạy /security-review trước khi merge.
 
 ## Workflow
-- Task vừa/lớn: đề xuất plan trước khi sửa code.
+- Mọi task (kể cả nhỏ): áp dụng "Cách làm việc: dạy-học" ở trên trước khi sửa code.
 - Sau khi code: tự chạy `pnpm lint && pnpm typecheck && pnpm test` và sửa đến khi pass.
 - Quyết định kiến trúc mới → viết ADR vào `docs/adr/`.
 - Không refactor ngoài phạm vi task nếu tôi không yêu cầu.
