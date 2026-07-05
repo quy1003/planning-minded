@@ -40,6 +40,7 @@ pnpm --filter @tripmind/api <cmd>                   # chạy riêng app api
 - NestJS: 1 module/domain; controller mỏng, logic trong service; repository qua Prisma.
 - Naming: files kebab-case, class PascalCase. Commits: conventional commits (`feat(auth): ...`).
 - Tests: mỗi feature mới PHẢI có tests. Unit cạnh source `*.spec.ts`; integration dùng Testcontainers, không mock DB.
+- Mỗi khi thêm/sửa 1 model trong `schema.prisma` (bất kỳ service nào) → cập nhật `prisma/seed.ts` tương ứng để luôn có data mẫu (Prisma tự chạy seed sau `migrate dev`/`migrate reset`).
 - Env vars: khai báo + validate trong config module (zod). Không đọc `process.env` rải rác.
 - Không commit secrets. Không log PII/tokens.
 

@@ -1,0 +1,25 @@
+// apps/api/prisma/schema.prisma
+// Phase 1 (modular monolith): 1 database dùng chung, chỉ model User cho Auth.
+// refresh_tokens/signing_keys (JWT bất đối xứng) là chuyện Phase 2 — xem docs/03-roadmap.md.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  avatarUrl    String?
+  preferences  Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
+}

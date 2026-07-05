@@ -68,6 +68,8 @@ So sánh `schema.prisma` (thiết kế) với cấu trúc **hiện tại** của
 5. **`apps/api/src/prisma/prisma.service.ts`** — 1 class `@Injectable()` kế thừa `PrismaClient`, tự `$connect()` lúc app khởi động (`OnModuleInit`) và `$disconnect()` lúc app tắt (`OnModuleDestroy`) — để không rò rỉ connection.
 6. **`apps/api/src/prisma/prisma.module.ts`** — `@Global()` module, export `PrismaService` (giống hệt pattern `ConfigModule` ở Task #1, bạn đã quen rồi).
 7. Wire `PrismaModule` vào `app.module.ts`.
+8. **`apps/api/prisma/seed.ts`** — script chèn dữ liệu mẫu (dùng `upsert`, không phải `create`, để chạy lại nhiều lần không lỗi trùng). Khai báo ở `package.json` field `"prisma": { "seed": "ts-node prisma/seed.ts" }` — Prisma tự nhận diện và **tự chạy seed sau mỗi lần `migrate dev`/`migrate reset`**. Chạy tay: `pnpm prisma:seed`.
+   > Quy tắc từ giờ: **mỗi khi thêm/sửa 1 model mới trong `schema.prisma`**, cập nhật luôn `seed.ts` để có data mẫu tương ứng — đừng để riêng model mới không có gì trong seed.
 
 ## Cách bạn tự test sau khi xong
 
