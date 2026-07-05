@@ -1,0 +1,16 @@
+{
+  "name": "@tripmind/config",
+  "private": true,
+  "version": "0.0.0",
+  "main": "./index.js",
+  "files": [
+    "tsconfig.base.json",
+    "eslint-preset.mjs",
+    "prettier-preset.json"
+  ],
+  "dependencies": {
+    "@eslint/js": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "typescript-eslint": "^8.18.2"
+  }
+}
