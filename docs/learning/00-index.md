@@ -8,7 +8,7 @@
 | 1 | Config Module (đọc & validate biến môi trường) | [01-config-module.md](01-config-module.md) | ✅ Xong |
 | 2 | Kết nối Database bằng Prisma | [02-prisma-setup.md](02-prisma-setup.md) | ✅ Xong |
 | 3 | Kết nối Redis | [03-redis-connection.md](03-redis-connection.md) | ✅ Xong |
-| 4 | Session Bootstrap (cookie đăng nhập) | [04-session-bootstrap.md](04-session-bootstrap.md) | ⬜ Chưa làm |
+| 4 | Session Bootstrap (cookie đăng nhập) | [04-session-bootstrap.md](04-session-bootstrap.md) | ✅ Xong |
 | 5 | Auth thật: đăng ký/đăng nhập/đăng xuất | [05-auth-logic.md](05-auth-logic.md) | ⬜ Chưa làm |
 | 6 | Test (unit + integration) | [06-testing.md](06-testing.md) | ⬜ Chưa làm |
 
