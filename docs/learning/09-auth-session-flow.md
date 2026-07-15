@@ -1,153 +1,306 @@
-# Auth session — Full luồng Login → Me → Logout
+# Auth session — Tài liệu học (gọn, đủ)
 
-> Tài liệu học: đọc kèm code trong `apps/api/src/auth/` và `bootstrap/configure-app.ts`, `main.ts`.  
-> Cập nhật: 2026-07-15.
+> **Đọc file này là đủ** cho flow Login → Me → Logout.  
+> Code: `apps/api/src/auth/`, `bootstrap/configure-app.ts`, `main.ts`.
 
 ---
 
-## Sequence đầy đủ (các layer)
+## 1. Bức tranh 30 giây
+
+```
+LOGIN:  password đúng → nhớ userId trên Redis → đưa client một cookie (sessionId)
+ME:     client gửi cookie → Redis lấy userId → Postgres lấy hồ sơ → req.user → trả JSON
+LOGOUT: xóa Redis → cookie vô dụng
+```
+
+| Khái niệm | Ví dụ | Vai trò |
+|---|---|---|
+| **sessionId** | `NZB6-guCbEg...` | Chìa random trên cookie |
+| **userId** | `87c3efab-...` | Id trong bảng `users` (Postgres) |
+| **Cookie** | `tripmind.sid=NZB6-...` | Client gửi lại mỗi request |
+| **Redis** | key `sess:NZB6-...` | Nhớ phiên (stateful) |
+| **`req.user`** | `{ id, email, name }` | Hồ sơ đủ trên **1 request** |
+
+**Đừng lẫn:** sessionId ≠ userId.
+
+---
+
+## 1b. Dòng thời gian (đọc từ trên xuống)
+
+### T0 — App start (một lần)
+
+1. `main.ts` tạo RedisStore  
+2. `configure-app` gắn `express-session` + `passport.session()`  
+→ Chỉ lắp ống, chưa có user nào login  
+
+---
+
+### T1 — User gửi Login
+
+```
+Client → POST /auth/login  { email, password }
+```
+
+| # | Thời điểm | Việc |
+|---|---|---|
+| 1 | Request vào | Nest tạo `req`, body = email/password |
+| 2 | LocalAuthGuard | Zod check body |
+| 3 | LocalStrategy.validate | Postgres + argon2 |
+| 4 | Passport | Gắn **`req.user`** = `{ id, email, name }` |
+| 5 | logIn → serializeUser | `req.session.passport.user` = **userId** (string) |
+| 6 | express-session | Redis **SET** `sess:<sessionId>` = JSON session |
+| 7 | Response | **`Set-Cookie: tripmind.sid=<sessionId>`** + `{ data: user }` |
+| 8 | Client | Lưu cookie |
+
+**Xong T1:** client có cookie; Redis có key; Postgres không đổi session.
+
+---
+
+### T2 — User gửi Me (sau đó, request mới)
+
+```
+Client → GET /auth/me   Cookie: tripmind.sid=<sessionId>
+```
+
+| # | Thời điểm | Việc |
+|---|---|---|
+| 1 | Request mới | `req` mới (trống user) |
+| 2 | express-session | Đọc cookie → `req.sessionID` → Redis **GET** → `req.session` |
+| 3 | passport.session | Đọc `passport.user` (userId) |
+| 4 | deserializeUser | Postgres findById → gắn **`req.user`** |
+| 5 | SessionAuthGuard | `isAuthenticated()`? |
+| 6 | @CurrentUser | Đọc `req.user` |
+| 7 | Response | `{ data: user }` (thường không Set-Cookie lại) |
+
+**Xong T2:** không hỏi password; `req.user` build lại từ DB mỗi lần.
+
+---
+
+### T3 — User Logout
+
+```
+Client → POST /auth/logout   Cookie: tripmind.sid=<sessionId>
+```
+
+| # | Thời điểm | Việc |
+|---|---|---|
+| 1 | Load session | Như T2 (cookie → Redis → deserialize) |
+| 2 | SessionAuthGuard | Phải đang login |
+| 3 | logout + destroy | Redis **DEL** `sess:<sessionId>` |
+| 4 | Response | `204` |
+
+---
+
+### T4 — Me lại (cookie cũ còn trên máy)
+
+```
+GET /auth/me + cookie cũ → Redis miss → 401
+```
+
+---
+
+### Timeline một dòng
+
+```
+T0 lắp ống
+ → T1 login: Strategy→req.user → serialize→Redis → Set-Cookie
+ → T2 me:    Cookie→Redis→deserialize→req.user → JSON
+ → T3 logout: DEL Redis
+ → T4 me:    401
+```
+
+---
+
+## 2. Trên `req` có gì? (trung tâm để hiểu)
+
+Mỗi HTTP request = một object `req` (sống hết request rồi bỏ).
+
+```
+req
+├── body              ← JSON login (email, password)
+├── sessionID         ← = cookie = phần sau "sess:" trên Redis
+├── session           ← nội dung load từ Redis VALUE
+│   └── passport.user ← chỉ userId (string)
+├── user              ← AuthUser object (Passport gắn)
+├── isAuthenticated() / logIn() / logout()
+```
+
+| Field | Kiểu | Ai gắn |
+|---|---|---|
+| `req.sessionID` | string sessionId | express-session (từ cookie) |
+| `req.session` | object ≈ Redis VALUE | express-session |
+| `req.session.passport.user` | string userId | Passport sau **serialize** |
+| `req.user` | `{ id, email, name }` | Passport: **Strategy** (lúc login) hoặc **deserialize** (lúc /me) |
+
+`@CurrentUser()` **chỉ đọc** `req.user` — không tự deserialize.
+
+---
+
+## 3. Redis lưu gì?
+
+```
+KEY:   sess:<sessionId>          ← prefix + req.sessionID
+VALUE: {
+  "cookie": { originalMaxAge, httpOnly, sameSite, path, ... },
+  "passport": { "user": "<userId>" }
+}
+TTL:   ~7 ngày (604800 giây) theo config cookie
+```
+
+| | Redis | `req` |
+|---|---|---|
+| Key (bỏ `sess:`) | sessionId | `req.sessionID` |
+| Value | JSON trên | ≈ `req.session` |
+
+- **RedisStore** = adapter (express-session ↔ lệnh Redis), không phải kho thứ 2.  
+- Postgres **không** lưu sessionId; chỉ lưu user / trip…
+
+---
+
+## 4. Flow Login (`POST /auth/login`)
+
+### Client gửi
+
+```http
+POST /auth/login
+Content-Type: application/json
+
+{"email":"demo@tripmind.local","password":"password123"}
+```
+
+### Server (thứ tự)
+
+1. **LocalAuthGuard** — Zod validate body  
+2. **`super.canActivate()`** → **LocalStrategy.validate** → DB + argon2  
+3. Passport gắn **`req.user`** = object Strategy trả về  
+4. **`super.logIn()`** → **serializeUser** → `done(null, userId)`  
+5. Ghi `req.session.passport.user = userId`  
+6. express-session + RedisStore → **SET** `sess:<sessionId>`  
+7. Response **`Set-Cookie: tripmind.sid=<sessionId>; HttpOnly; SameSite=Lax; Max-Age=604800`**  
+8. Controller `@CurrentUser()` đọc `req.user` → `{ data: user }`
+
+### Trên login, `@CurrentUser` lấy từ đâu?
+
+Từ **`req.user` vừa gắn bởi Strategy** (cùng request) — **không** từ Redis/deserialize.
+
+---
+
+## 5. Flow Me (`GET /auth/me`)
+
+### Client gửi
+
+```http
+GET /auth/me
+Cookie: tripmind.sid=<sessionId>
+```
+
+Không gửi password.
+
+### Server (thứ tự)
+
+1. express-session: cookie → `req.sessionID` → Redis **GET** → `req.session`  
+2. `passport.session()`: đọc `passport.user` (userId)  
+3. **deserializeUser(userId)** → `findById` Postgres → gắn **`req.user`**  
+4. **SessionAuthGuard** — `isAuthenticated()`?  
+5. `@CurrentUser()` → trả `{ data: req.user }`
+
+```
+Redis passport.user (string id)
+    → deserialize + Postgres
+    → req.user (object đủ)
+```
+
+Có `passport.user` trong Redis **không** tự thành `req.user` — phải deserialize.
+
+---
+
+## 6. Flow Logout (`POST /auth/logout`)
+
+1. Cookie → load session (như Me)  
+2. SessionAuthGuard  
+3. `req.logout()` + `req.session.destroy()` → Redis **DEL**  
+4. `204` — cookie trên máy client có thể còn nhưng key Redis mất → Me sau = 401  
+
+---
+
+## 7. Sequence (Mermaid)
 
 ```mermaid
 sequenceDiagram
-  autonumber
-  participant C as Client (curl/browser)
-  participant Nest as NestJS HTTP
-  participant LAG as LocalAuthGuard
-  participant LS as LocalStrategy
-  participant AS as AuthService
+  participant C as Client
+  participant G as LocalAuthGuard / SessionAuthGuard
+  participant S as Strategy / Serializer
+  participant R as Redis
   participant DB as Postgres
-  participant PP as Passport
-  participant Ser as SessionSerializer
-  participant ES as express-session
-  participant RS as RedisStore
-  participant Redis as Redis
-  participant SAG as SessionAuthGuard
-  participant Ctrl as AuthController
 
-  Note over C,Redis: ========== 1. POST /auth/login ==========
-  C->>Nest: POST /auth/login + JSON email/password
-  Nest->>LAG: canActivate
-  LAG->>LAG: Zod validate body
-  LAG->>PP: super.canActivate ("local")
-  PP->>LS: validate(email, password)
-  LS->>AS: validateUser
-  AS->>DB: find user + argon2.verify
-  DB-->>AS: ok
-  AS-->>LS: AuthUser {id,email,name}
-  LS-->>PP: user
-  LAG->>PP: super.logIn(req)
-  PP->>Ser: serializeUser(user)
-  Ser-->>PP: done(null, userId)
-  PP->>ES: req.session.passport.user = userId
-  ES->>RS: store.set(sessionId, sessionJSON)
-  RS->>Redis: SET sess:sessionId {...}
-  ES-->>C: Set-Cookie: tripmind.sid=sessionId
-  Nest->>Ctrl: login handler
-  Ctrl-->>C: 200 { data: AuthUser }
+  Note over C,DB: LOGIN
+  C->>G: POST /login + email/password
+  G->>S: Strategy.validate
+  S->>DB: verify password
+  S-->>G: AuthUser → req.user
+  G->>S: logIn → serializeUser
+  S-->>R: SET sess:ID { passport.user: userId }
+  G-->>C: Set-Cookie sid=ID + { data: user }
 
-  Note over C,Redis: ========== 2. GET /auth/me (có cookie) ==========
-  C->>Nest: GET /auth/me + Cookie tripmind.sid
-  Nest->>ES: đọc cookie → sessionId
-  ES->>RS: store.get(sessionId)
-  RS->>Redis: GET sess:sessionId
-  Redis-->>RS: session JSON (có userId)
-  RS-->>ES: req.session
-  Nest->>PP: passport.session()
-  PP->>Ser: deserializeUser(userId)
-  Ser->>AS: findById
-  AS->>DB: SELECT user
-  DB-->>Ser: AuthUser
-  Ser-->>PP: done(null, user)
-  PP->>Nest: req.user = AuthUser
-  Nest->>SAG: canActivate → isAuthenticated?
-  SAG-->>Nest: true
-  Nest->>Ctrl: me(@CurrentUser)
-  Ctrl-->>C: 200 { data: AuthUser }
+  Note over C,DB: ME
+  C->>G: GET /me + Cookie sid=ID
+  G->>R: GET sess:ID
+  R-->>G: passport.user
+  G->>S: deserializeUser
+  S->>DB: findById
+  S-->>G: req.user
+  G-->>C: { data: user }
 
-  Note over C,Redis: ========== 3. POST /auth/logout ==========
-  C->>Nest: POST /auth/logout + Cookie
-  Nest->>ES: load session từ Redis (như trên)
-  Nest->>PP: deserialize → req.user
-  Nest->>SAG: isAuthenticated?
-  SAG-->>Nest: true
-  Nest->>Ctrl: logout
-  Ctrl->>PP: req.logout()
-  Ctrl->>ES: req.session.destroy()
-  ES->>RS: store.destroy(sessionId)
-  RS->>Redis: DEL sess:sessionId
-  Ctrl-->>C: 204 No Content
-
-  Note over C,Redis: ========== 4. GET /auth/me lại ==========
-  C->>Nest: GET /auth/me + cookie cũ
-  ES->>Redis: GET sess:... → miss
-  Nest->>SAG: isAuthenticated? false
-  SAG-->>C: 401 problem+json category=business
+  Note over C,DB: LOGOUT
+  C->>G: POST /logout + Cookie
+  G->>R: DEL sess:ID
+  G-->>C: 204
 ```
-
-> Tip: trong VS Code/Cursor, cài extension Mermaid hoặc preview Markdown để xem diagram.
 
 ---
 
-## Các layer làm gì
+## 8. Guard vs Strategy vs Serializer
 
-| Layer | Vai trò trong flow |
+| Thành phần | Việc |
 |---|---|
-| **Client** | Gửi body login; giữ/gửi cookie `tripmind.sid` |
 | **LocalAuthGuard** | Cổng login: Zod → Strategy → `logIn` |
-| **LocalStrategy** | Chứng minh email/password (`validate` — tên cứng) |
-| **AuthService + Postgres** | Hash verify / load user |
-| **SessionSerializer** | Login: user → `userId`; Me: `userId` → user (`done` callback) |
-| **Passport** | Ghép Strategy + Serializer + `req.user` / `isAuthenticated` |
-| **express-session** | Quản lý `req.session`; set/read cookie |
-| **RedisStore (`connect-redis`)** | Bridge: session ↔ lệnh Redis |
-| **Redis** | Lưu `sess:<id>` = JSON session (có `passport.user` = userId) |
-| **SessionAuthGuard** | Me/Logout: chỉ hỏi đã login chưa (không gọi Strategy) |
-| **Controller** | Trả `{ data }` / 204; logout gọi destroy |
+| **LocalStrategy** | `validate(email,password)` — tên hàm **cứng** |
+| **SessionSerializer** | serialize: user→userId; deserialize: userId→user |
+| **SessionAuthGuard** | Chỉ `isAuthenticated()` — không hỏi password |
+
+`canActivate` = Nest Guard (tên cứng).  
+`done(err, data)` = callback Passport báo kết quả serialize/deserialize.
 
 ---
 
-## Dữ liệu lúc đang login
+## 9. Nhiều user / nhiều thiết bị / 2 tab
 
-```
-Cookie (client)              Redis
-tripmind.sid = abc123   →    key:   sess:abc123
-                             value: {
-                               cookie: { ... },
-                               passport: { user: "<userId>" }
-                             }
-```
-
-- **Serializer** quyết định `passport.user` là **id** (`done(null, user.id)`).
-- **RedisStore + express-session** lo **cất / lấy / xóa** key đó.
-- Serializer **không** gọi Redis trực tiếp.
-
----
-
-## Nhớ nhanh 2 bước login
-
-| Gọi | Ý nghĩa |
+| Tình huống | Session |
 |---|---|
-| `super.canActivate()` | Chạy Strategy → password đúng không? |
-| `super.logIn()` | Chạy `serializeUser` → ghi session → Redis + cookie |
+| 2 user khác máy | 2 cookie, 2 key Redis |
+| 1 user 2 điện thoại | 2 session (cùng userId, khác sessionId) |
+| 1 user 2 tab **cùng browser** | **Chung 1 cookie** → chung 1 session; logout 1 tab = mất cả |
+
+Force logout **mọi thiết bị**: chưa có (Redis không index theo userId). Logout 1 máy = `DEL` đúng key đó → được.
 
 ---
 
-## File map
+## 10. File cần mở (theo thứ tự)
 
-| Bước | File |
+| # | File |
 |---|---|
-| RedisStore gắn vào session | `apps/api/src/main.ts` |
-| `session()` + `passport.session()` | `apps/api/src/bootstrap/configure-app.ts` |
-| Guard login | `apps/api/src/auth/guards/local-auth.guard.ts` |
-| Strategy | `apps/api/src/auth/strategies/local.strategy.ts` |
-| serialize / deserialize | `apps/api/src/auth/serializers/session.serializer.ts` |
-| Guard me/logout | `apps/api/src/auth/guards/session-auth.guard.ts` |
-| HTTP handlers | `apps/api/src/auth/auth.controller.ts` |
-| `@CurrentUser()` | `apps/api/src/common/decorators/current-user.decorator.ts` |
+| 1 | `main.ts` — RedisStore |
+| 2 | `bootstrap/configure-app.ts` — `session()` + `passport.session()` |
+| 3 | `auth/guards/local-auth.guard.ts` |
+| 4 | `auth/strategies/local.strategy.ts` |
+| 5 | `auth/serializers/session.serializer.ts` |
+| 6 | `auth/guards/session-auth.guard.ts` |
+| 7 | `auth/auth.controller.ts` |
+| 8 | `common/decorators/current-user.decorator.ts` |
 
 ---
 
-## Tự thử
+## 11. Tự thử
 
 ```bash
 pnpm --filter @tripmind/api dev
@@ -158,7 +311,17 @@ curl -c cookies.txt -X POST http://localhost:3000/auth/login \
 
 curl -b cookies.txt http://localhost:3000/auth/me
 curl -b cookies.txt -X POST http://localhost:3000/auth/logout
-curl -b cookies.txt http://localhost:3000/auth/me   # kỳ vọng 401
+curl -b cookies.txt http://localhost:3000/auth/me   # 401
+
+docker compose -f infra/docker-compose.yml exec redis redis-cli KEYS 'sess:*'
 ```
 
-Có thể mở Redis Insight / `redis-cli KEYS 'sess:*'` để thấy key xuất hiện sau login và biến mất sau logout.
+---
+
+## Checklist “đã hiểu”
+
+- [ ] Cookie chỉ mang **sessionId**, không mang password  
+- [ ] Redis VALUE ≈ `req.session`; key ≈ `sess:` + `req.sessionID`  
+- [ ] `passport.user` = userId string; `req.user` = object từ Strategy (login) hoặc deserialize (/me)  
+- [ ] `@CurrentUser` chỉ đọc `req.user`  
+- [ ] Login: Strategy → `req.user` rồi mới serialize lên Redis  

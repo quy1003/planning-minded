@@ -12,6 +12,7 @@ export class LocalAuthGuard extends AuthGuard("local") {
   override async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
     const parsed = loginSchema.safeParse(request.body);
+
     if (!parsed.success) {
       throw new BadRequestException({
         detail: "Validation failed",
@@ -22,9 +23,12 @@ export class LocalAuthGuard extends AuthGuard("local") {
       });
     }
     request.body = parsed.data;
-
+    
+    // Chạy LocalStrategy.validate()
     const activated = (await super.canActivate(context)) as boolean;
+    // Gọi logIn() để ghi user vào session (cookie) thông qua SessionSerializer
     await super.logIn(request);
+    
     return activated;
   }
 }

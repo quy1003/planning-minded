@@ -11,6 +11,6 @@ import { LocalStrategy } from "./strategies/local.strategy";
   imports: [PassportModule.register({ session: true })],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy, SessionSerializer, LocalAuthGuard, SessionAuthGuard],
-  exports: [AuthService],
+  exports: [AuthService, SessionAuthGuard],
 })
 export class AuthModule {}

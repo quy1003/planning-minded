@@ -15,7 +15,7 @@
 | 5 | Auth logic | [05-auth-logic.md](05-auth-logic.md) | ✅ |
 | 6 | Auth tests | [06-testing.md](06-testing.md) | ✅ |
 | 7 | Response format | [07-response-format.md](07-response-format.md) | ✅ |
-| — | **Sơ đồ session Login→Me→Logout** | [09-auth-session-flow.md](09-auth-session-flow.md) | ✅ học |
+| — | **Auth session (đọc file này là đủ)** | [09-auth-session-flow.md](09-auth-session-flow.md) | ✅ đã viết gọn lại |
 
 ## Trip module
 

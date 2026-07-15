@@ -91,7 +91,7 @@ auth/
 - Plan: `docs/learning/07-response-format.md`
 
 ### Auth session flow (học)
-- Sơ đồ Mermaid Login → Me → Logout + layer map: `docs/learning/09-auth-session-flow.md`
+- **Một file đủ:** `docs/learning/09-auth-session-flow.md` (đã viết gọn: req / Redis / login / me / logout)
 
 ### Trip CRUD + Places (Phần A+B) ✅
 - Bài giảng: `docs/learning/08-trip-crud.md`
