@@ -1,7 +1,8 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import type { RegisterInput } from "@tripmind/shared";
 import type { AuthUser } from "../common/decorators/current-user.decorator";
+import { BusinessException } from "../common/exceptions/business.exception";
 import { PrismaService } from "../prisma/prisma.service";
 import { hashPassword, verifyPassword } from "./utils/password.util";
 
@@ -26,9 +27,9 @@ export class AuthService {
       });
       return toAuthUser(user);
     } catch (error: unknown) {
-      // P2002 = unique constraint (email đã tồn tại)
+      // P2002 = unique constraint (email đã tồn tại) → lỗi business, không phải 500
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-        throw new ConflictException({ detail: "Email already registered" });
+        throw new BusinessException("Email already registered", HttpStatus.CONFLICT);
       }
       throw error;
     }

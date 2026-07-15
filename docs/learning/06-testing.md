@@ -1,5 +1,8 @@
 # Task nhỏ #6 — Viết test cho Auth (unit + integration)
 
+> Trạng thái: **✅ xong** (2026-07-15).
+> Nhật ký tổng: `docs/nhat-ky.md`.
+
 ## Task này làm gì?
 
 Viết 2 loại test khác nhau cho toàn bộ Auth module vừa xong ở Task #5:
@@ -12,35 +15,28 @@ Viết 2 loại test khác nhau cho toàn bộ Auth module vừa xong ở Task #
 
 ## Khái niệm mới
 
-- **Testcontainers** — thư viện tự động **bật 1 container Docker Postgres mới tinh, trống trơn** ngay lúc test bắt đầu chạy, rồi **tự tắt** khi test xong. Mỗi lần chạy `pnpm test:integration` là 1 database hoàn toàn sạch, không lo test trước để lại rác ảnh hưởng test sau.
-- **`prisma db push`** (khác `migrate dev` ở Task #2) — đẩy thẳng `schema.prisma` lên database mà **không tạo file migration** (không cần lịch sử, vì container này bị xóa ngay sau khi test xong, không cần nhớ lại lịch sử làm gì). Dùng `db push` cho test cho nhanh; dùng `migrate dev` cho môi trường dev thật (cần lưu lịch sử để deploy sau này).
-- **`supertest`** — thư viện gọi HTTP request giả lập tới app Nest ngay trong Node (không cần app đang chạy ở port thật), dùng để viết `request(app.getHttpServer()).post("/auth/login").send({...})` giống hệt `curl` nhưng viết bằng code, tự động assert (`expect(...)`).
-- **`supertest.agent(...)`** — bản đặc biệt của supertest, **tự nhớ cookie** giữa các lần gọi (giống trình duyệt thật) — cần thiết để test luồng "login xong gọi `/me` bằng cookie vừa nhận".
+- **Testcontainers** — thư viện tự động **bật container Docker mới** lúc test chạy, rồi **tự tắt** khi xong. Mỗi lần `pnpm test:integration` là môi trường sạch.
+- **Postgres + Redis containers** — `AppModule` cần cả Prisma và Redis (session). Integration bật **cả hai** container (doc cũ chỉ nói Postgres — thiếu Redis sẽ fail lúc boot).
+- **`prisma db push`** — đẩy schema lên DB test **không** tạo file migration (container bỏ sau test). Dev thật vẫn dùng `migrate dev`.
+- **`supertest` / `supertest.agent`** — gọi HTTP trong process Nest; `agent` nhớ cookie giữa các request (giống browser).
 
 ## Các bước nhỏ
 
-1. **Unit test** (đặt cạnh file nguồn, đuôi `.spec.ts`):
-   - `password.util.spec.ts` — hash rồi verify đúng/sai, 2 lần hash cùng password ra 2 chuỗi khác nhau (do salt ngẫu nhiên).
-   - `zod-validation.pipe.spec.ts` — input đúng thì pass qua, input sai thì throw.
-   - `local.strategy.spec.ts` — giả lập (stub) `AuthService` bằng object đơn giản, test riêng logic của `LocalStrategy` (không cần DB thật vì AuthService ở đây chỉ là giả).
-2. **Integration test** (đuôi `.integration-spec.ts`, tách riêng để không lẫn với unit test khi chạy `pnpm test`):
-   - `test/db-test-helper.ts` — hàm `startTestDatabase()`: bật container Postgres, set `process.env.DATABASE_URL` trỏ vào container đó, chạy `prisma db push`.
-   - `auth.integration-spec.ts` — dùng `startTestDatabase()` + `Test.createTestingModule({ imports: [AppModule] })` + `configureApp()` (dùng lại y hệt hàm ở Task #4 — đây chính là lý do task #4 tách hàm riêng), rồi test toàn bộ luồng register/login/me/logout bằng supertest.
-3. Thêm file cấu hình jest riêng cho integration test (`jest.integration.config.js`) + script `test:integration` trong `package.json`.
+1. Unit: `utils/password.util.spec.ts`, `common/pipes/zod-validation.pipe.spec.ts`, `strategies/local.strategy.spec.ts`
+2. `test/db-test-helper.ts` — Postgres + Redis Testcontainers, set env, `prisma db push`
+3. `test/auth.integration-spec.ts` — register / login / me / logout
+4. `jest.integration.config.js` + script `test:integration`; unit jest **ignore** `*.integration-spec.ts`
 
 ## Cách bạn tự chạy
 
 ```bash
-# Unit test — nhanh, không cần Docker
+# Unit — không cần Docker
 pnpm --filter @tripmind/api test
 
-# Integration test — cần Docker đang chạy (Testcontainers tự bật thêm 1 Postgres riêng)
-docker compose -f infra/docker-compose.yml up -d
+# Integration — cần Docker daemon (Testcontainers tự kéo image)
 pnpm --filter @tripmind/api test:integration
 ```
 
-Kỳ vọng: cả 2 lệnh đều pass hết (xanh), không skip test nào.
-
 ## Sau task này
 
-Auth module (Task #1 → #6) coi như xong — bước tiếp theo theo `docs/03-roadmap.md` Phase 1 là **Trip CRUD** (sẽ viết file học riêng khi tới lúc đó).
+Auth module (Task #1 → #6) xong → **Trip CRUD** (file học riêng khi tới lúc đó).

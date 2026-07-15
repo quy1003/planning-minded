@@ -3,6 +3,7 @@ import session from "express-session";
 import passport from "passport";
 import { ConfigService } from "../config/config.service";
 import { HttpExceptionFilter } from "../common/filters/http-exception.filter";
+import { TransformInterceptor } from "../common/interceptors/transform.interceptor";
 
 const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7; // 7 ngày
 
@@ -10,6 +11,7 @@ const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7; // 7 ngày
 // main.ts (app chạy thật) sẽ truyền RedisStore thật vào tham số này.
 export function configureApp(app: INestApplication, configService: ConfigService, sessionStore?: session.Store): void {
   app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalInterceptors(new TransformInterceptor());
 
   app.use(
     session({
