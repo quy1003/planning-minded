@@ -1,5 +1,16 @@
 import { Module } from "@nestjs/common";
+import { PassportModule } from "@nestjs/passport";
+import { AuthController } from "./auth.controller";
+import { AuthService } from "./auth.service";
+import { LocalAuthGuard } from "./guards/local-auth.guard";
+import { SessionAuthGuard } from "./guards/session-auth.guard";
+import { SessionSerializer } from "./serializers/session.serializer";
+import { LocalStrategy } from "./strategies/local.strategy";
 
-// Placeholder — domain logic (register/login/JWT) đến ở Phase 1 (docs/03-roadmap.md)
-@Module({})
+@Module({
+  imports: [PassportModule.register({ session: true })],
+  controllers: [AuthController],
+  providers: [AuthService, LocalStrategy, SessionSerializer, LocalAuthGuard, SessionAuthGuard],
+  exports: [AuthService],
+})
 export class AuthModule {}

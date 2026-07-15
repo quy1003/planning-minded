@@ -1,5 +1,8 @@
 # Task nhỏ #5 — Auth thật: đăng ký / đăng nhập / đăng xuất
 
+> Trạng thái: **đã implement** — bạn tự curl test theo mục dưới. Task #6 (tests) làm sau.
+> Cập nhật 2026-07-15: `packages/shared` hiện vẫn trống — schema auth sẽ tạo trong task này (doc cũ ghi “đã có sẵn” là sai so với source hiện tại).
+
 ## Task này làm gì?
 
 Đây là task "lắp vòi nước" — dùng tất cả những gì đã setup (Config #1, Prisma #2, Redis #3, Session #4) để làm ra 4 endpoint thật:
@@ -8,27 +11,66 @@
 - `POST /auth/logout` — xóa session
 - `GET /auth/me` — trả về user đang đăng nhập (dùng để test session còn sống hay không)
 
-## Khái niệm mới
+## Vì sao cần
 
-- **Hash password bằng `argon2`** — **không bao giờ lưu password dạng chữ thường (plaintext)** vào database. Nếu database bị lộ, hacker thấy password thật ngay lập tức. `argon2.hash(password)` biến password thành 1 chuỗi không thể đảo ngược lại thành password gốc; lúc đăng nhập, dùng `argon2.verify(hash, password)` để kiểm tra password nhập vào có khớp hash đã lưu không — **không cần** và **không thể** giải mã hash để lấy lại password gốc.
-- **Zod Validation Pipe** — `apps/api` cần 1 "chốt chặn" kiểm tra dữ liệu request gửi lên có đúng format không (email hợp lệ, password đủ dài...) **trước khi** chạm vào logic thật. Đã có sẵn `registerSchema`/`loginSchema` (zod) ở `packages/shared` — task này viết 1 "Pipe" (khái niệm NestJS: 1 bước xử lý dữ liệu trước khi vào hàm controller) dùng lại schema đó.
-- **Passport `LocalStrategy`** — "cách xác thực" cụ thể bằng email+password. Bạn viết 1 hàm `validate(email, password)` trả về user nếu đúng, throw lỗi nếu sai — passport tự lo phần còn lại (đọc `req.body`, gọi hàm này, gắn kết quả vào `req.user`).
-- **`Guard`** — 1 "người gác cổng" trước khi vào route handler, quyết định cho qua hay chặn. `LocalAuthGuard` chặn `/auth/login` nếu email/password sai. `SessionAuthGuard` (tự viết) chặn `/auth/me` nếu chưa đăng nhập (check `req.isAuthenticated()`).
-- **`@CurrentUser()` decorator** — 1 helper tự viết, lấy `req.user` ra cho gọn, dùng trong controller như `me(@CurrentUser() user) {...}` thay vì phải viết `@Req() req` rồi tự gõ `req.user` mỗi lần.
-- **RFC 9457 (`problem+json`)** — chuẩn định dạng lỗi HTTP (đã ghi trong `CLAUDE.md`). Thay vì mỗi lỗi trả về JSON tùy tiện, mọi lỗi đều có format thống nhất: `{ type, title, status, detail, instance }`. Viết 1 `ExceptionFilter` (bắt mọi lỗi, format lại theo chuẩn này) dùng chung cho toàn app.
+Không có auth thì không làm được Trip CRUD (mọi trip phải gắn `userId` từ session, không lấy từ body). Phase 1 dùng **session cookie** (đơn giản để học); JWT EdDSA là Phase 2.
 
-## Các bước nhỏ (thứ tự làm)
+## Khái niệm mới (mức junior)
 
-1. `apps/api/src/auth/password.util.ts` — 2 hàm `hashPassword`/`verifyPassword` (bọc `argon2`), tách riêng để test không cần đụng database.
-2. `apps/api/src/common/pipes/zod-validation.pipe.ts` — Pipe dùng chung, nhận vào 1 zod schema bất kỳ.
-3. `apps/api/src/common/filters/http-exception.filter.ts` — format lỗi theo RFC 9457.
-4. `apps/api/src/common/decorators/current-user.decorator.ts` — lấy `req.user`.
-5. `apps/api/src/auth/auth.service.ts` — `register()` (hash password + lưu DB, bắt lỗi email trùng), `validateUser()` (dùng cho login), `findById()` (dùng để khôi phục session).
-6. `apps/api/src/auth/local.strategy.ts` + `local-auth.guard.ts` — cấu hình passport-local.
-7. `apps/api/src/auth/session.serializer.ts` — dạy passport cách lưu/khôi phục user vào session (chỉ lưu `userId`, không lưu cả object user vào session cho gọn).
-8. `apps/api/src/auth/guards/session-auth.guard.ts` — check đã đăng nhập chưa.
-9. `apps/api/src/auth/auth.controller.ts` — 4 endpoint.
-10. Sửa `auth.module.ts` — đăng ký hết các thứ trên.
+- **Hash password bằng `argon2id`** — **không bao giờ lưu password plaintext** vào DB. `argon2.hash` → chuỗi không đảo ngược; login dùng `argon2.verify(hash, password)`.
+- **Contract ở `packages/shared`** — `registerSchema` / `loginSchema` (zod) sống ở shared để web + api dùng chung, không duplicate. Hiện `packages/shared/src/index.ts` còn `export {}` — task này sẽ thêm schemas.
+- **Zod Validation Pipe** — “chốt chặn” NestJS: validate body **trước** khi vào service. Pipe nhận 1 zod schema bất kỳ.
+- **Passport `LocalStrategy`** — chiến lược email+password. Bạn viết `validate()`; Passport đọc body, gắn user vào `req.user`.
+- **`Guard`** — gác cổng route. `LocalAuthGuard` cho login; `SessionAuthGuard` chặn `/me` nếu chưa đăng nhập (`req.isAuthenticated()`).
+- **`@CurrentUser()`** — decorator lấy `req.user` cho gọn.
+- **RFC 9457 (`problem+json`)** — mọi lỗi HTTP cùng format: `{ type, title, status, detail, instance }` (+ `errors` khi validate fail).
+
+## Dependencies cần cài thêm
+
+Trong `@tripmind/api`:
+- `argon2` — hash password
+- `passport-local` + `@types/passport-local`
+- (đã có: `passport`, `@nestjs/passport`, `express-session`, `zod`)
+
+Trong `@tripmind/shared`:
+- `zod` — để khai báo schema (api đã có zod; shared cần dependency riêng vì package độc lập)
+
+## Cấu trúc thư mục auth (sau refactor)
+
+```
+auth/
+  auth.controller.ts
+  auth.service.ts
+  auth.module.ts
+  guards/          local-auth.guard.ts, session-auth.guard.ts
+  strategies/      local.strategy.ts
+  serializers/     session.serializer.ts
+  utils/           password.util.ts
+```
+
+## Các bước nhỏ (thứ tự làm — mentor sẽ làm từng bước, dừng giải thích)
+
+1. `packages/shared` — thêm `registerSchema` / `loginSchema` + export; wire package để api import được.
+2. Cài deps (`argon2`, `passport-local`, …).
+3. `apps/api/src/auth/utils/password.util.ts` — `hashPassword` / `verifyPassword`.
+4. `apps/api/src/common/pipes/zod-validation.pipe.ts`
+5. `apps/api/src/common/filters/http-exception.filter.ts` — RFC 9457; đăng ký global trong bootstrap.
+6. `apps/api/src/common/decorators/current-user.decorator.ts`
+7. `apps/api/src/auth/auth.service.ts` — `register`, `validateUser`, `findById` (không trả `passwordHash` ra ngoài).
+8. `strategies/local.strategy.ts` + `guards/local-auth.guard.ts`
+9. `serializers/session.serializer.ts` — session chỉ lưu `userId`.
+10. `guards/session-auth.guard.ts`
+11. `auth.controller.ts` — 4 endpoint.
+12. Sửa `auth.module.ts` + gắn filter vào `configure-app` / `main`.
+13. Cập nhật `prisma/seed.ts` — hash thật bằng argon2 cho user demo (password ghi trong comment seed, vd `password123`).
+
+## Trade-off đã chọn
+
+| Lựa chọn | Vì sao |
+|---|---|
+| Session cookie (không JWT) | Đúng Phase 1 roadmap; JWT EdDSA để Phase 2 |
+| Schema ở `packages/shared` | Contract dùng chung, tránh duplicate khi có web |
+| Không trả `passwordHash` trong response | Bảo mật cơ bản — không leak hash ra client |
 
 ## Cách bạn tự test (dùng `curl`)
 
