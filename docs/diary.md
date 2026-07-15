@@ -44,7 +44,7 @@
 
 | Loại | Việc | TT |
 |---|---|---|
-| feature | Trip CRUD (places, itinerary, lat/lng) | ⬜ |
+| feature | Trip CRUD + Places | 🚧 | `learning/08-trip-crud.md` (itinerary API còn lại) |
 | scaffold | `apps/web` Next.js + map | ⬜ |
 
 ### Phase 2+ (chưa làm)
@@ -89,6 +89,15 @@ auth/
 - Success: `{ data: ... }` (`TransformInterceptor`)
 - Error: problem+json + `category: business | system` (filter + Logger cho system)
 - Plan: `docs/learning/07-response-format.md`
+
+### Auth session flow (học)
+- Sơ đồ Mermaid Login → Me → Logout + layer map: `docs/learning/09-auth-session-flow.md`
+
+### Trip CRUD + Places (Phần A+B) ✅
+- Bài giảng: `docs/learning/08-trip-crud.md`
+- Models: Trip, Place, ItineraryItem (schema); API itinerary = Phần C chưa làm
+- Endpoints: `/trips` CRUD + `/trips/:id/places` CRUD; ownership qua session
+- Seed: trip Đà Lạt + 2 places cho demo user
 
 ---
 

@@ -1,15 +1,26 @@
-# Auth Module — Danh sách task nhỏ (Phase 1)
+# Auth + Trip — Danh sách task nhỏ (Phase 1)
 
-> Mục tiêu chung: user đăng ký/đăng nhập/đăng xuất bằng session (chưa phải JWT — đó là Phase 2). Xem `docs/03-roadmap.md`.
-> Quy tắc làm việc: xem "Cách làm việc: dạy-học" trong `CLAUDE.md` — đọc file task trước, hiểu rồi mới code, từng bước có giải thích.
+> Mục tiêu Auth: đăng ký/đăng nhập/đăng xuất bằng session (chưa JWT — Phase 2).  
+> Mục tiêu Trip: CRUD trip + places thủ công. Xem `docs/03-roadmap.md`.  
+> Quy tắc: `CLAUDE.md` — đọc file task trước, hiểu rồi mới code.
+
+## Auth module
 
 | # | Task | File | Trạng thái |
 |---|---|---|---|
-| 1 | Config Module (đọc & validate biến môi trường) | [01-config-module.md](01-config-module.md) | ✅ Xong |
-| 2 | Kết nối Database bằng Prisma | [02-prisma-setup.md](02-prisma-setup.md) | ✅ Xong |
-| 3 | Kết nối Redis | [03-redis-connection.md](03-redis-connection.md) | ✅ Xong |
-| 4 | Session Bootstrap (cookie đăng nhập) | [04-session-bootstrap.md](04-session-bootstrap.md) | ✅ Xong |
-| 5 | Auth thật: đăng ký/đăng nhập/đăng xuất | [05-auth-logic.md](05-auth-logic.md) | ✅ Xong |
-| 6 | Test (unit + integration) | [06-testing.md](06-testing.md) | ✅ Xong |
+| 1 | Config Module | [01-config-module.md](01-config-module.md) | ✅ |
+| 2 | Prisma | [02-prisma-setup.md](02-prisma-setup.md) | ✅ |
+| 3 | Redis | [03-redis-connection.md](03-redis-connection.md) | ✅ |
+| 4 | Session bootstrap | [04-session-bootstrap.md](04-session-bootstrap.md) | ✅ |
+| 5 | Auth logic | [05-auth-logic.md](05-auth-logic.md) | ✅ |
+| 6 | Auth tests | [06-testing.md](06-testing.md) | ✅ |
+| 7 | Response format | [07-response-format.md](07-response-format.md) | ✅ |
+| — | **Sơ đồ session Login→Me→Logout** | [09-auth-session-flow.md](09-auth-session-flow.md) | ✅ học |
 
-Sau khi xong cả 6, Auth module coi như hoàn thiện — bước tiếp theo là Trip CRUD (file học sẽ viết khi tới lúc đó).
+## Trip module
+
+| # | Task | File | Trạng thái |
+|---|---|---|---|
+| 8 | Trip CRUD + Places (+ bài giảng) | [08-trip-crud.md](08-trip-crud.md) | ✅ A+B · ⬜ C itinerary API |
+
+Sau Phần C itinerary → có thể làm Next.js web + map.
