@@ -39,6 +39,12 @@ pnpm --filter @tripmind/api <cmd>                   # chạy riêng app api
 - Validation ở biên: mọi input qua zod/class-validator DTO. Error format: RFC 9457 problem+json.
 - NestJS: 1 module/domain; controller mỏng, logic trong service; repository qua Prisma.
 - Naming: files kebab-case, class PascalCase. Commits: conventional commits (`feat(auth): ...`).
+- Naming biến/tham số (bắt buộc — để review code nhanh, không phải suy luận theo ngữ cảnh mới hiểu biến đó là gì):
+  - Luôn dùng danh từ cụ thể của entity/domain (`trip`, `place`, `itineraryItem`, `updatedTrip`, `reorderedItineraryItems`...).
+  - **Cấm** đặt tên chung chung không nói lên nó là gì khi trong scope có nhiều loại dữ liệu hoặc tên đó lặp lại nhiều nơi: `item`, `data`, `row`, `updated`, `result`, `res`, `tmp`, `obj`, `val`. Ngoại lệ: tên đã có type annotation rõ ràng ngay tại chỗ khai báo và scope rất ngắn (vd `const data: Prisma.TripUpdateInput = {}` trong 1 hàm 5 dòng) thì được giữ ngắn.
+  - Khi 1 hàm có 2 tập dữ liệu cùng loại entity nhưng ý nghĩa khác nhau (vd "item hiện có trong DB" vs "lệnh muốn đổi tới"), đặt tên phân biệt rõ theo vai trò (`existingItineraryItem` vs `move`), không dùng chung 1 tên (`row`) cho cả hai.
+  - Route param (`@Param`) và tên biến tương ứng phải khớp nhau và khớp với các route khác cùng entity trong cùng controller (vd đã sửa `:id` → `:tripId` ở `TripController` cho nhất quán với `:placeId`/`:itemId`), không dùng `id` trần trụi khi route khác trong cùng file đã dùng `xxxId`.
+  - Tên method controller/service nên chứa tên entity (`getTrip`, `addPlace`, `addItineraryItem`), tránh verb trần trụi (`get`, `update`, `remove`) khi các method khác cùng class đã có entity trong tên.
 - Tests: mỗi feature mới PHẢI có tests. Unit cạnh source `*.spec.ts`; integration dùng Testcontainers, không mock DB.
 - Mỗi khi thêm/sửa 1 model trong `schema.prisma` (bất kỳ service nào) → cập nhật `prisma/seed.ts` tương ứng để luôn có data mẫu (Prisma tự chạy seed sau `migrate dev`/`migrate reset`).
 - Env vars: khai báo + validate trong config module (zod). Không đọc `process.env` rải rác.

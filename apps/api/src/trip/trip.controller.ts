@@ -11,12 +11,18 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import {
+  createItineraryItemSchema,
   createPlaceSchema,
   createTripSchema,
+  reorderItinerarySchema,
+  updateItineraryItemSchema,
   updatePlaceSchema,
   updateTripSchema,
+  type CreateItineraryItemInput,
   type CreatePlaceInput,
   type CreateTripInput,
+  type ReorderItineraryInput,
+  type UpdateItineraryItemInput,
   type UpdatePlaceInput,
   type UpdateTripInput,
 } from "@tripmind/shared";
@@ -44,7 +50,7 @@ export class TripController {
     return this.tripService.listForUser(user.id);
   }
 
-  // Places routes trước `:id` — tránh Nest hiểu nhầm path.
+  // Places / itinerary routes trước `:id` — tránh Nest hiểu nhầm path.
   @Post(":tripId/places")
   @HttpCode(HttpStatus.CREATED)
   addPlace(
@@ -80,23 +86,68 @@ export class TripController {
     await this.tripService.deletePlace(user.id, tripId, placeId);
   }
 
-  @Get(":id")
-  get(@CurrentUser() user: AuthUser, @Param("id") id: string) {
-    return this.tripService.getForUser(user.id, id);
+  @Get(":tripId/itinerary")
+  listItinerary(@CurrentUser() user: AuthUser, @Param("tripId") tripId: string) {
+    return this.tripService.listItinerary(user.id, tripId);
   }
 
-  @Patch(":id")
-  update(
+  @Post(":tripId/itinerary")
+  @HttpCode(HttpStatus.CREATED)
+  addItineraryItem(
     @CurrentUser() user: AuthUser,
-    @Param("id") id: string,
+    @Param("tripId") tripId: string,
+    @Body(new ZodValidationPipe(createItineraryItemSchema)) body: CreateItineraryItemInput,
+  ) {
+    return this.tripService.addItineraryItem(user.id, tripId, body);
+  }
+
+  // `reorder` trước `:itemId` — tránh Nest coi "reorder" là itemId.
+  @Patch(":tripId/itinerary/reorder")
+  reorderItinerary(
+    @CurrentUser() user: AuthUser,
+    @Param("tripId") tripId: string,
+    @Body(new ZodValidationPipe(reorderItinerarySchema)) body: ReorderItineraryInput,
+  ) {
+    return this.tripService.reorderItinerary(user.id, tripId, body);
+  }
+
+  @Patch(":tripId/itinerary/:itemId")
+  updateItineraryItem(
+    @CurrentUser() user: AuthUser,
+    @Param("tripId") tripId: string,
+    @Param("itemId") itemId: string,
+    @Body(new ZodValidationPipe(updateItineraryItemSchema)) body: UpdateItineraryItemInput,
+  ) {
+    return this.tripService.updateItineraryItem(user.id, tripId, itemId, body);
+  }
+
+  @Delete(":tripId/itinerary/:itemId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeItineraryItem(
+    @CurrentUser() user: AuthUser,
+    @Param("tripId") tripId: string,
+    @Param("itemId") itemId: string,
+  ): Promise<void> {
+    await this.tripService.deleteItineraryItem(user.id, tripId, itemId);
+  }
+
+  @Get(":tripId")
+  getTrip(@CurrentUser() user: AuthUser, @Param("tripId") tripId: string) {
+    return this.tripService.getForUser(user.id, tripId);
+  }
+
+  @Patch(":tripId")
+  updateTrip(
+    @CurrentUser() user: AuthUser,
+    @Param("tripId") tripId: string,
     @Body(new ZodValidationPipe(updateTripSchema)) body: UpdateTripInput,
   ) {
-    return this.tripService.updateForUser(user.id, id, body);
+    return this.tripService.updateForUser(user.id, tripId, body);
   }
 
-  @Delete(":id")
+  @Delete(":tripId")
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@CurrentUser() user: AuthUser, @Param("id") id: string): Promise<void> {
-    await this.tripService.deleteForUser(user.id, id);
+  async removeTrip(@CurrentUser() user: AuthUser, @Param("tripId") tripId: string): Promise<void> {
+    await this.tripService.deleteForUser(user.id, tripId);
   }
 }

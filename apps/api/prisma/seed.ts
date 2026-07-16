@@ -21,12 +21,13 @@ async function main() {
     },
   });
 
-  const existingTrip = await prisma.trip.findFirst({
+  let trip = await prisma.trip.findFirst({
     where: { userId: user.id, title: "Đà Lạt 3 ngày (seed)" },
+    include: { places: true, itineraryItems: true },
   });
 
-  if (!existingTrip) {
-    const trip = await prisma.trip.create({
+  if (!trip) {
+    trip = await prisma.trip.create({
       data: {
         userId: user.id,
         title: "Đà Lạt 3 ngày (seed)",
@@ -54,9 +55,43 @@ async function main() {
           ],
         },
       },
-      include: { places: true },
+      include: { places: true, itineraryItems: true },
     });
     console.log(`Seeded trip: ${trip.title} (${trip.id}) with ${trip.places.length} places`);
+  }
+
+  if (trip.itineraryItems.length === 0 && trip.places.length >= 2) {
+    const lake = trip.places.find((p) => p.name === "Hồ Xuân Hương") ?? trip.places[0];
+    const market = trip.places.find((p) => p.name === "Chợ Đà Lạt") ?? trip.places[1];
+
+    await prisma.itineraryItem.createMany({
+      data: [
+        {
+          tripId: trip.id,
+          placeId: lake.id,
+          dayNumber: 1,
+          slot: "MORNING",
+          visitOrder: 1,
+          title: "Đi bộ quanh Hồ Xuân Hương",
+          startTime: new Date("1970-01-01T08:00:00.000Z"),
+          endTime: new Date("1970-01-01T09:30:00.000Z"),
+          durationMin: 90,
+          estCost: 0,
+        },
+        {
+          tripId: trip.id,
+          placeId: market.id,
+          dayNumber: 1,
+          slot: "AFTERNOON",
+          visitOrder: 1,
+          title: "Ăn trưa / mua đặc sản Chợ Đà Lạt",
+          startTime: new Date("1970-01-01T12:00:00.000Z"),
+          durationMin: 120,
+          estCost: 300_000,
+        },
+      ],
+    });
+    console.log(`Seeded itinerary items for trip ${trip.id}`);
   }
 
   console.log(`Seeded user: ${user.email} (${user.id})`);

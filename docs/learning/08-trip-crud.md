@@ -1,6 +1,6 @@
 # Bài giảng — Trip CRUD (Phase 1)
 
-> Trạng thái: **Phần A+B đã code** (Trip + Places). Itinerary CRUD = Phần C (schema đã có, API chưa).  
+> Trạng thái: **Phần A+B+C đã code** (Trip + Places + Itinerary). Chi tiết itinerary: `11-itinerary-crud.md`.  
 > Đọc kèm: `docs/06-database-schema.md`, `docs/01-requirements.md` Epic C, `docs/diary.md`.
 
 ---

@@ -44,7 +44,7 @@
 
 | Loại | Việc | TT |
 |---|---|---|
-| feature | Trip CRUD + Places | 🚧 | `learning/08-trip-crud.md` (itinerary API còn lại) |
+| feature | Trip + Places + Itinerary CRUD | ✅ | `learning/08`, `learning/11` |
 | scaffold | `apps/web` Next.js + map | ⬜ |
 
 ### Phase 2+ (chưa làm)
@@ -95,9 +95,13 @@ auth/
 
 ### Trip CRUD + Places (Phần A+B) ✅
 - Bài giảng: `docs/learning/08-trip-crud.md`
-- Models: Trip, Place, ItineraryItem (schema); API itinerary = Phần C chưa làm
 - Endpoints: `/trips` CRUD + `/trips/:id/places` CRUD; ownership qua session
-- Seed: trip Đà Lạt + 2 places cho demo user
+
+### Itinerary CRUD (Phần C) ✅
+- Bài giảng: `docs/learning/11-itinerary-crud.md`
+- Endpoints: `/trips/:tripId/itinerary` CRUD + `PATCH .../reorder` (atomic, visitOrder tạm số âm)
+- Unique `(day, slot, visitOrder)` → 409; place đang dùng → không xóa (Restrict)
+- Seed: 2 itinerary items cho trip Đà Lạt demo
 
 ---
 

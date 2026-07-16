@@ -21,6 +21,7 @@
 
 | # | Task | File | Trạng thái |
 |---|---|---|---|
-| 8 | Trip CRUD + Places (+ bài giảng) | [08-trip-crud.md](08-trip-crud.md) | ✅ A+B · ⬜ C itinerary API |
+| 8 | Trip CRUD + Places (+ bài giảng) | [08-trip-crud.md](08-trip-crud.md) | ✅ A+B |
+| 11 | Itinerary CRUD (Phần C) | [11-itinerary-crud.md](11-itinerary-crud.md) | ✅ |
 
 Sau Phần C itinerary → có thể làm Next.js web + map.
