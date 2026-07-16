@@ -1,28 +1,11 @@
 import { HttpStatus } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { BusinessException } from "../common/exceptions/business.exception";
-import { TripService } from "./trip.service";
+import { ItineraryService } from "./itinerary.service";
 
-describe("TripService ownership (unit-ish with stub repository)", () => {
-  it("getForUser throws business 404 when trip missing", async () => {
-    const repository = {
-      findOwnedTrip: jest.fn().mockResolvedValue(null),
-    };
-    const service = new TripService(repository as never);
-
-    await expect(service.getForUser("user-1", "trip-1")).rejects.toBeInstanceOf(BusinessException);
-    try {
-      await service.getForUser("user-1", "trip-1");
-    } catch (error: unknown) {
-      expect(error).toBeInstanceOf(BusinessException);
-      expect((error as BusinessException).getStatus()).toBe(HttpStatus.NOT_FOUND);
-    }
-  });
-
+describe("ItineraryService (unit-ish with stub repository/access)", () => {
   it("addItineraryItem maps unique violation to business 409", async () => {
     const repository = {
-      findOwnedTrip: jest.fn().mockResolvedValue({ id: "trip-1", userId: "user-1", days: 3 }),
-      findOwnedPlace: jest.fn().mockResolvedValue({ id: "place-1", tripId: "trip-1" }),
       createItineraryItem: jest
         .fn()
         .mockRejectedValue(
@@ -32,7 +15,11 @@ describe("TripService ownership (unit-ish with stub repository)", () => {
           }),
         ),
     };
-    const service = new TripService(repository as never);
+    const access = {
+      requireOwnedTrip: jest.fn().mockResolvedValue({ id: "trip-1", userId: "user-1", days: 3 }),
+      requireOwnedPlace: jest.fn().mockResolvedValue({ id: "place-1", tripId: "trip-1" }),
+    };
+    const service = new ItineraryService(repository as never, access as never);
 
     await expect(
       service.addItineraryItem("user-1", "trip-1", {
@@ -58,10 +45,11 @@ describe("TripService ownership (unit-ish with stub repository)", () => {
   });
 
   it("addItineraryItem rejects dayNumber outside trip.days", async () => {
-    const repository = {
-      findOwnedTrip: jest.fn().mockResolvedValue({ id: "trip-1", userId: "user-1", days: 2 }),
+    const repository = {};
+    const access = {
+      requireOwnedTrip: jest.fn().mockResolvedValue({ id: "trip-1", userId: "user-1", days: 2 }),
     };
-    const service = new TripService(repository as never);
+    const service = new ItineraryService(repository as never, access as never);
 
     try {
       await service.addItineraryItem("user-1", "trip-1", {

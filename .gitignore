@@ -8,3 +8,7 @@ dist/
 .DS_Store
 coverage/
 *.tsbuildinfo
+
+# Ghi chú học / nhật ký cá nhân — không commit
+docs/learning/
+docs/diary.md

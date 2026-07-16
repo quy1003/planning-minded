@@ -29,12 +29,18 @@ import {
 import { SessionAuthGuard } from "../auth/guards/session-auth.guard";
 import { CurrentUser, type AuthUser } from "../common/decorators/current-user.decorator";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
-import { TripService } from "./trip.service";
+import { ItineraryService } from "./itinerary.service";
+import { PlaceService } from "./place.service";
+import { TripCrudService } from "./trip-crud.service";
 
 @Controller("trips")
 @UseGuards(SessionAuthGuard)
 export class TripController {
-  constructor(private readonly tripService: TripService) {}
+  constructor(
+    private readonly tripCrudService: TripCrudService,
+    private readonly placeService: PlaceService,
+    private readonly itineraryService: ItineraryService,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -42,15 +48,15 @@ export class TripController {
     @CurrentUser() user: AuthUser,
     @Body(new ZodValidationPipe(createTripSchema)) body: CreateTripInput,
   ) {
-    return this.tripService.create(user.id, body);
+    return this.tripCrudService.create(user.id, body);
   }
 
   @Get()
   list(@CurrentUser() user: AuthUser) {
-    return this.tripService.listForUser(user.id);
+    return this.tripCrudService.listForUser(user.id);
   }
 
-  // Places / itinerary routes trước `:id` — tránh Nest hiểu nhầm path.
+  // Places / itinerary routes trước `:tripId` — tránh Nest hiểu nhầm path.
   @Post(":tripId/places")
   @HttpCode(HttpStatus.CREATED)
   addPlace(
@@ -58,12 +64,12 @@ export class TripController {
     @Param("tripId") tripId: string,
     @Body(new ZodValidationPipe(createPlaceSchema)) body: CreatePlaceInput,
   ) {
-    return this.tripService.addPlace(user.id, tripId, body);
+    return this.placeService.addPlace(user.id, tripId, body);
   }
 
   @Get(":tripId/places")
   listPlaces(@CurrentUser() user: AuthUser, @Param("tripId") tripId: string) {
-    return this.tripService.listPlaces(user.id, tripId);
+    return this.placeService.listPlaces(user.id, tripId);
   }
 
   @Patch(":tripId/places/:placeId")
@@ -73,7 +79,7 @@ export class TripController {
     @Param("placeId") placeId: string,
     @Body(new ZodValidationPipe(updatePlaceSchema)) body: UpdatePlaceInput,
   ) {
-    return this.tripService.updatePlace(user.id, tripId, placeId, body);
+    return this.placeService.updatePlace(user.id, tripId, placeId, body);
   }
 
   @Delete(":tripId/places/:placeId")
@@ -83,12 +89,12 @@ export class TripController {
     @Param("tripId") tripId: string,
     @Param("placeId") placeId: string,
   ): Promise<void> {
-    await this.tripService.deletePlace(user.id, tripId, placeId);
+    await this.placeService.deletePlace(user.id, tripId, placeId);
   }
 
   @Get(":tripId/itinerary")
   listItinerary(@CurrentUser() user: AuthUser, @Param("tripId") tripId: string) {
-    return this.tripService.listItinerary(user.id, tripId);
+    return this.itineraryService.listItinerary(user.id, tripId);
   }
 
   @Post(":tripId/itinerary")
@@ -98,7 +104,7 @@ export class TripController {
     @Param("tripId") tripId: string,
     @Body(new ZodValidationPipe(createItineraryItemSchema)) body: CreateItineraryItemInput,
   ) {
-    return this.tripService.addItineraryItem(user.id, tripId, body);
+    return this.itineraryService.addItineraryItem(user.id, tripId, body);
   }
 
   // `reorder` trước `:itemId` — tránh Nest coi "reorder" là itemId.
@@ -108,7 +114,7 @@ export class TripController {
     @Param("tripId") tripId: string,
     @Body(new ZodValidationPipe(reorderItinerarySchema)) body: ReorderItineraryInput,
   ) {
-    return this.tripService.reorderItinerary(user.id, tripId, body);
+    return this.itineraryService.reorderItinerary(user.id, tripId, body);
   }
 
   @Patch(":tripId/itinerary/:itemId")
@@ -118,7 +124,7 @@ export class TripController {
     @Param("itemId") itemId: string,
     @Body(new ZodValidationPipe(updateItineraryItemSchema)) body: UpdateItineraryItemInput,
   ) {
-    return this.tripService.updateItineraryItem(user.id, tripId, itemId, body);
+    return this.itineraryService.updateItineraryItem(user.id, tripId, itemId, body);
   }
 
   @Delete(":tripId/itinerary/:itemId")
@@ -128,12 +134,12 @@ export class TripController {
     @Param("tripId") tripId: string,
     @Param("itemId") itemId: string,
   ): Promise<void> {
-    await this.tripService.deleteItineraryItem(user.id, tripId, itemId);
+    await this.itineraryService.deleteItineraryItem(user.id, tripId, itemId);
   }
 
   @Get(":tripId")
   getTrip(@CurrentUser() user: AuthUser, @Param("tripId") tripId: string) {
-    return this.tripService.getForUser(user.id, tripId);
+    return this.tripCrudService.getForUser(user.id, tripId);
   }
 
   @Patch(":tripId")
@@ -142,12 +148,12 @@ export class TripController {
     @Param("tripId") tripId: string,
     @Body(new ZodValidationPipe(updateTripSchema)) body: UpdateTripInput,
   ) {
-    return this.tripService.updateForUser(user.id, tripId, body);
+    return this.tripCrudService.updateForUser(user.id, tripId, body);
   }
 
   @Delete(":tripId")
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeTrip(@CurrentUser() user: AuthUser, @Param("tripId") tripId: string): Promise<void> {
-    await this.tripService.deleteForUser(user.id, tripId);
+    await this.tripCrudService.deleteForUser(user.id, tripId);
   }
 }
