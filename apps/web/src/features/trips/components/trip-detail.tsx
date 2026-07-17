@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { ItinerarySection } from "@/features/itinerary/components/itinerary-section";
 import { PlacesSection } from "@/features/places/components/places-section";
 import { ApiError } from "@/lib/api-client";
 import { useTrip, useUpdateTrip } from "../hooks";
@@ -45,6 +46,8 @@ export function TripDetail({ tripId }: Props) {
 
       <PlacesSection tripId={trip.id} />
 
+      <ItinerarySection tripId={trip.id} tripDays={trip.days} />
+
       <section className="space-y-3">
         <h2 className="text-lg font-medium">{t("editSection")}</h2>
         <TripForm
@@ -55,10 +58,6 @@ export function TripDetail({ tripId }: Props) {
           onSubmit={(values) => update.mutate(toUpdateTripInput(values))}
         />
         {update.isSuccess && <p className="text-sm text-teal-800">{t("saveSuccess")}</p>}
-      </section>
-
-      <section className="rounded-lg border border-dashed border-zinc-300 bg-white px-4 py-6 text-sm text-zinc-500">
-        {t("detailNextSlice")}
       </section>
     </div>
   );

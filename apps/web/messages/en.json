@@ -56,7 +56,6 @@
     "delete": "Delete",
     "deleting": "Deleting…",
     "deleteConfirm": "Delete trip \"{title}\"? This cannot be undone.",
-    "detailNextSlice": "Itinerary + drag-and-drop reorder (Slice 4) will land here next.",
     "fields": {
       "title": "Title",
       "destination": "Destination",
@@ -95,6 +94,43 @@
       "address": "Address",
       "lat": "Latitude",
       "lng": "Longitude"
+    }
+  },
+  "Itinerary": {
+    "title": "Itinerary",
+    "subtitle": "Schedule places by day and slot. Drag ⋮⋮ to reorder within a slot.",
+    "loading": "Loading itinerary…",
+    "loadFailed": "Failed to load itinerary",
+    "dayLabel": "Day {day}",
+    "emptySlot": "Empty — add an item on the right.",
+    "addTitle": "Add itinerary item",
+    "editTitle": "Edit itinerary item",
+    "addSubmit": "Add",
+    "saveSubmit": "Save",
+    "saving": "Saving…",
+    "saveFailed": "Save failed",
+    "cancelEdit": "Cancel",
+    "delete": "Delete",
+    "deleteConfirm": "Delete \"{title}\"?",
+    "needPlaces": "Add at least one place before creating itinerary items.",
+    "dragHandle": "Drag to reorder",
+    "conflictOrder": "Order conflict (day/slot/visitOrder) — try again.",
+    "reorderFailed": "Reorder failed",
+    "slots": {
+      "MORNING": "Morning",
+      "AFTERNOON": "Afternoon",
+      "EVENING": "Evening"
+    },
+    "fields": {
+      "place": "Place",
+      "title": "Title",
+      "day": "Day",
+      "slot": "Slot",
+      "startTime": "Start",
+      "endTime": "End",
+      "durationMin": "Minutes",
+      "estCost": "Est. cost",
+      "description": "Description"
     }
   }
 }

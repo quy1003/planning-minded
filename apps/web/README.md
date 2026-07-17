@@ -17,12 +17,11 @@ pnpm dev
 
 Copy `apps/web/.env.example` → `apps/web/.env.local` nếu cần đổi URL.
 
-## Auth (Slice 1) + i18n
+## Phase 1 UI
 
-- `/vi/login`, `/en/login` — Zod shared + React Hook Form
-- `/vi/trips` — placeholder (cần session); header có logout + đổi ngôn ngữ
-- Cookie `tripmind.sid` qua rewrite `/api/*`
-- **next-intl**: messages ở `messages/{vi,en}.json`
+- Auth: `/vi/login`, `/en/login` — session cookie qua `/api/*` rewrite
+- Trips CRUD, places + MapLibre, itinerary + dnd-kit reorder
+- **next-intl**: `messages/{vi,en}.json`
 
 Demo: `demo@tripmind.local` / `password123`
 

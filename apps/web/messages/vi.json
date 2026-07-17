@@ -56,7 +56,6 @@
     "delete": "Xóa",
     "deleting": "Đang xóa…",
     "deleteConfirm": "Xóa chuyến đi \"{title}\"? Không hoàn tác được.",
-    "detailNextSlice": "Lịch trình / itinerary + kéo-thả (Slice 4) sẽ thêm ở đây.",
     "fields": {
       "title": "Tiêu đề",
       "destination": "Điểm đến",
@@ -95,6 +94,43 @@
       "address": "Địa chỉ",
       "lat": "Vĩ độ (lat)",
       "lng": "Kinh độ (lng)"
+    }
+  },
+  "Itinerary": {
+    "title": "Lịch trình",
+    "subtitle": "Sắp place theo ngày / buổi. Kéo ⋮⋮ để đổi thứ tự trong cùng buổi.",
+    "loading": "Đang tải lịch trình…",
+    "loadFailed": "Không tải được lịch trình",
+    "dayLabel": "Ngày {day}",
+    "emptySlot": "Trống — thêm item bên phải.",
+    "addTitle": "Thêm lịch trình",
+    "editTitle": "Sửa lịch trình",
+    "addSubmit": "Thêm",
+    "saveSubmit": "Lưu",
+    "saving": "Đang lưu…",
+    "saveFailed": "Lưu thất bại",
+    "cancelEdit": "Hủy sửa",
+    "delete": "Xóa",
+    "deleteConfirm": "Xóa \"{title}\"?",
+    "needPlaces": "Cần ít nhất một địa điểm trước khi thêm lịch trình.",
+    "dragHandle": "Kéo để đổi thứ tự",
+    "conflictOrder": "Thứ tự (ngày/buổi/visitOrder) bị trùng — thử lại.",
+    "reorderFailed": "Đổi thứ tự thất bại",
+    "slots": {
+      "MORNING": "Sáng",
+      "AFTERNOON": "Chiều",
+      "EVENING": "Tối"
+    },
+    "fields": {
+      "place": "Địa điểm",
+      "title": "Tiêu đề",
+      "day": "Ngày",
+      "slot": "Buổi",
+      "startTime": "Bắt đầu",
+      "endTime": "Kết thúc",
+      "durationMin": "Phút",
+      "estCost": "Chi phí ước tính",
+      "description": "Mô tả"
     }
   }
 }

@@ -1,13 +1,20 @@
 import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
-import { routing } from "./routing";
+import en from "../../messages/en.json";
+import vi from "../../messages/vi.json";
+import { routing, type AppLocale } from "./routing";
+
+const catalogs: Record<AppLocale, typeof vi> = { vi, en };
 
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;
-  const locale = hasLocale(routing.locales, requested) ? requested : routing.defaultLocale;
+  const locale = hasLocale(routing.locales, requested)
+    ? (requested as AppLocale)
+    : routing.defaultLocale;
 
   return {
     locale,
-    messages: (await import(`../../messages/${locale}.json`)).default,
+    // Import tĩnh — Turbopack không “kẹt” bản messages cũ như dynamic import().
+    messages: catalogs[locale],
   };
 });
