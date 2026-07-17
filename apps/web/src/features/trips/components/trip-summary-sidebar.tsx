@@ -7,6 +7,7 @@ import { MobileCollapsible } from "@/components/ui/mobile-collapsible";
 import { SuccessDialog } from "@/components/ui/success-dialog";
 import { DAY_SLOTS } from "@/features/itinerary/types";
 import type { ItineraryItem } from "@/features/itinerary/types";
+import { formatMoney } from "@/lib/format-money";
 import type { Trip } from "../types";
 import { DeleteTripButton } from "./delete-trip-button";
 import { EditTripDialog } from "./edit-trip-dialog";
@@ -22,18 +23,6 @@ function sumEstCost(items: ItineraryItem[]): number {
     const n = Number.parseFloat(item.estCost);
     return acc + (Number.isFinite(n) ? n : 0);
   }, 0);
-}
-
-function formatMoney(value: number, currency: string, locale: string): string {
-  try {
-    return new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency: currency.length === 3 ? currency : "VND",
-      maximumFractionDigits: currency === "VND" ? 0 : 2,
-    }).format(value);
-  } catch {
-    return `${value} ${currency}`;
-  }
 }
 
 function TripActions({

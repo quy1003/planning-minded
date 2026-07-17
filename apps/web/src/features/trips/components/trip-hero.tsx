@@ -1,7 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import type { Trip } from "../types";
+import { TripStatusBadge } from "./trip-status-badge";
 
 type Props = {
   trip: Trip;
@@ -9,8 +9,6 @@ type Props = {
 
 /** Frame giống Landing CTA: soft accent → card. Hero chỉ hiện status (chi tiết ở sidebar). */
 export function TripHero({ trip }: Props) {
-  const t = useTranslations("Trips");
-
   return (
     <section className="rounded-3xl border border-border bg-gradient-to-b from-accent-soft to-card px-6 py-10 text-center sm:px-10 sm:py-12">
       <div className="mx-auto max-w-2xl">
@@ -28,25 +26,9 @@ export function TripHero({ trip }: Props) {
           {trip.title}
         </h1>
         <div className="mt-5 flex justify-center">
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold tracking-wide ${statusChipClass(trip.status)}`}
-          >
-            {t(`status.${trip.status}`)}
-          </span>
+          <TripStatusBadge status={trip.status} />
         </div>
       </div>
     </section>
   );
-}
-
-function statusChipClass(status: Trip["status"]): string {
-  switch (status) {
-    case "PLANNED":
-      return "border border-accent/30 bg-accent-soft text-accent";
-    case "COMPLETED":
-      return "border border-success/30 bg-success-soft text-success-foreground";
-    case "DRAFT":
-    default:
-      return "border border-border bg-surface/80 text-muted backdrop-blur";
-  }
 }

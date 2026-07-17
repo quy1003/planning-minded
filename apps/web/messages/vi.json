@@ -152,7 +152,7 @@
   },
   "Trips": {
     "title": "Chuyến đi",
-    "newTrip": "Tạo chuyến đi",
+    "newTrip": "Bắt đầu chuyến đi",
     "newTitle": "Tạo chuyến đi mới",
     "backToList": "Tất cả chuyến đi",
     "empty": "Bạn chưa có chuyến đi nào.",
@@ -162,6 +162,11 @@
     "loadFailed": "Không tải được dữ liệu",
     "notFound": "Không tìm thấy chuyến đi",
     "daysShort": "ngày",
+  "list": {
+    "unscheduledYear": "Chưa có ngày",
+    "viewDetail": "Xem chi tiết",
+    "partyCount": "{count} người"
+  },
     "editSection": "Chỉnh sửa",
     "createSubmit": "Tạo chuyến đi",
     "saveSubmit": "Lưu thay đổi",

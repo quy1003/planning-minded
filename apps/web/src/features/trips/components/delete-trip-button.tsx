@@ -7,30 +7,48 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { useDeleteTrip } from "../hooks";
 
-type Props = { tripId: string; title: string };
+type Props = { tripId: string; title: string; variant?: "default" | "icon" };
 
-export function DeleteTripButton({ tripId, title }: Props) {
+export function DeleteTripButton({ tripId, title, variant = "default" }: Props) {
   const t = useTranslations("Trips");
   const del = useDeleteTrip();
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <button
-        type="button"
-        disabled={del.isPending}
-        aria-busy={del.isPending}
-        className="btn btn-danger w-full sm:w-auto"
-        onClick={() => {
-          del.reset();
-          setOpen(true);
-        }}
-      >
-        <ButtonPending pending={del.isPending} onDark>
-          <TrashIcon />
-          {t("delete")}
-        </ButtonPending>
-      </button>
+      {variant === "icon" ? (
+        <button
+          type="button"
+          disabled={del.isPending}
+          aria-busy={del.isPending}
+          aria-label={`${t("delete")} ${title}`}
+          className="inline-flex size-8 items-center justify-center rounded-full bg-muted/10 text-muted transition hover:bg-danger-soft hover:text-danger disabled:opacity-60"
+          onClick={() => {
+            del.reset();
+            setOpen(true);
+          }}
+        >
+          <ButtonPending pending={del.isPending}>
+            <TrashIcon />
+          </ButtonPending>
+        </button>
+      ) : (
+        <button
+          type="button"
+          disabled={del.isPending}
+          aria-busy={del.isPending}
+          className="btn btn-danger w-full sm:w-auto"
+          onClick={() => {
+            del.reset();
+            setOpen(true);
+          }}
+        >
+          <ButtonPending pending={del.isPending} onDark>
+            <TrashIcon />
+            {t("delete")}
+          </ButtonPending>
+        </button>
+      )}
 
       {del.isError && (
         <InlineAlert variant="error">

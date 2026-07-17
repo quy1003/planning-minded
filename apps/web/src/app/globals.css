@@ -221,3 +221,23 @@ body {
   border: 1px solid var(--border);
   background-color: var(--card);
 }
+
+/* Dải màu trang trí đầu card trip — chọn theo hash(id), không mang ý nghĩa category. */
+@utility trip-cover-0 {
+  background: radial-gradient(120% 160% at 15% 10%, #ffe29a 0%, #ff9d6c 55%, #ff7a59 100%);
+}
+@utility trip-cover-1 {
+  background: radial-gradient(120% 160% at 15% 10%, #b7f0c0 0%, #45c287 55%, #1e9e6b 100%);
+}
+@utility trip-cover-2 {
+  background: radial-gradient(120% 160% at 15% 10%, #fbd5ee 0%, #d7a9f5 55%, #b27ce8 100%);
+}
+@utility trip-cover-3 {
+  background: radial-gradient(120% 160% at 15% 10%, #ffcf8e 0%, #f0925c 55%, #e2694a 100%);
+}
+@utility trip-cover-4 {
+  background: radial-gradient(120% 160% at 15% 10%, #bae6fd 0%, #38bdf8 55%, #0284c7 100%);
+}
+@utility trip-cover-5 {
+  background: radial-gradient(120% 160% at 15% 10%, #fbcfe8 0%, #f472b6 55%, #db2777 100%);
+}

@@ -162,6 +162,11 @@
     "loadFailed": "Failed to load data",
     "notFound": "Trip not found",
     "daysShort": "days",
+  "list": {
+    "unscheduledYear": "No date yet",
+    "viewDetail": "View detail",
+    "partyCount": "{count} people"
+  },
     "editSection": "Edit trip",
     "createSubmit": "Create trip",
     "saveSubmit": "Save changes",
