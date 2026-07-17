@@ -32,11 +32,45 @@
     "sessionError": "Lỗi tải phiên: {message}"
   },
   "AppShell": {
-    "subtitle": "Chuyến đi của bạn"
+    "subtitle": "Chuyến đi của bạn",
+    "navTrips": "Danh sách"
   },
   "Trips": {
     "title": "Chuyến đi",
-    "placeholder": "Bạn đã đăng nhập. CRUD trip + bản đồ sẽ làm ở slice tiếp theo.",
-    "empty": "Chưa có UI list trip — API GET /trips đã sẵn sàng."
+    "newTrip": "Tạo chuyến đi",
+    "newTitle": "Tạo chuyến đi mới",
+    "backToList": "Tất cả chuyến đi",
+    "empty": "Bạn chưa có chuyến đi nào.",
+    "createFirst": "Tạo chuyến đi đầu tiên",
+    "loadingList": "Đang tải danh sách…",
+    "loadingDetail": "Đang tải chuyến đi…",
+    "loadFailed": "Không tải được dữ liệu",
+    "notFound": "Không tìm thấy chuyến đi",
+    "daysShort": "ngày",
+    "editSection": "Chỉnh sửa",
+    "createSubmit": "Tạo chuyến đi",
+    "saveSubmit": "Lưu thay đổi",
+    "saving": "Đang lưu…",
+    "saveSuccess": "Đã lưu.",
+    "saveFailed": "Lưu thất bại",
+    "delete": "Xóa",
+    "deleting": "Đang xóa…",
+    "deleteConfirm": "Xóa chuyến đi “{title}”? Không hoàn tác được.",
+    "detailNextSlice": "Places + bản đồ (Slice 3) và lịch trình (Slice 4) sẽ thêm ở đây.",
+    "fields": {
+      "title": "Tiêu đề",
+      "destination": "Điểm đến",
+      "startDate": "Ngày bắt đầu",
+      "days": "Số ngày",
+      "partySize": "Số người",
+      "budget": "Ngân sách",
+      "currency": "Tiền tệ",
+      "status": "Trạng thái"
+    },
+    "status": {
+      "DRAFT": "Nháp",
+      "PLANNED": "Đã lên kế hoạch",
+      "COMPLETED": "Đã hoàn thành"
+    }
   }
 }

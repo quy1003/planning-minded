@@ -32,11 +32,45 @@
     "sessionError": "Failed to load session: {message}"
   },
   "AppShell": {
-    "subtitle": "Your trips"
+    "subtitle": "Your trips",
+    "navTrips": "All trips"
   },
   "Trips": {
     "title": "Trips",
-    "placeholder": "You are signed in. Trip CRUD + map come in the next slice.",
-    "empty": "Trip list UI is not ready yet — GET /trips API is available."
+    "newTrip": "New trip",
+    "newTitle": "Create a trip",
+    "backToList": "All trips",
+    "empty": "You do not have any trips yet.",
+    "createFirst": "Create your first trip",
+    "loadingList": "Loading trips…",
+    "loadingDetail": "Loading trip…",
+    "loadFailed": "Failed to load data",
+    "notFound": "Trip not found",
+    "daysShort": "days",
+    "editSection": "Edit",
+    "createSubmit": "Create trip",
+    "saveSubmit": "Save changes",
+    "saving": "Saving…",
+    "saveSuccess": "Saved.",
+    "saveFailed": "Save failed",
+    "delete": "Delete",
+    "deleting": "Deleting…",
+    "deleteConfirm": "Delete trip “{title}”? This cannot be undone.",
+    "detailNextSlice": "Places + map (Slice 3) and itinerary (Slice 4) will land here next.",
+    "fields": {
+      "title": "Title",
+      "destination": "Destination",
+      "startDate": "Start date",
+      "days": "Days",
+      "partySize": "Party size",
+      "budget": "Budget",
+      "currency": "Currency",
+      "status": "Status"
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "PLANNED": "Planned",
+      "COMPLETED": "Completed"
+    }
   }
 }
