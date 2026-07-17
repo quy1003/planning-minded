@@ -6,8 +6,10 @@ import { useState } from "react";
 import { ButtonPending } from "@/components/ui/button-pending";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { InlineAlert } from "@/components/ui/inline-alert";
+import { MobileCollapsible } from "@/components/ui/mobile-collapsible";
 import { QueryError } from "@/components/ui/query-error";
 import { SectionBlockSkeleton, Skeleton } from "@/components/ui/skeleton";
+import { SuccessDialog } from "@/components/ui/success-dialog";
 import { ApiError } from "@/lib/api-client";
 import {
   useCreatePlace,
@@ -17,12 +19,12 @@ import {
 } from "../hooks";
 import { toCreatePlaceInput, toUpdatePlaceInput, type PlaceFormValues } from "../place-form-schema";
 import type { Place } from "../types";
-import { PlaceForm } from "./place-form";
+import { PlaceFormDialog } from "./place-form-dialog";
 
 function MapLoading() {
   const t = useTranslations("Places");
   return (
-    <div className="flex h-72 items-center justify-center rounded-xl border border-zinc-200 bg-zinc-100 text-sm text-zinc-500 sm:h-80 lg:h-full lg:min-h-80">
+    <div className="flex h-full min-h-[240px] items-center justify-center bg-muted/20 text-sm text-muted lg:min-h-[480px]">
       {t("mapLoading")}
     </div>
   );
@@ -38,6 +40,12 @@ const TripMap = dynamic(
 
 type Props = { tripId: string };
 
+type MapMode = "idle" | "create" | "relocate";
+
+/**
+ * Create: Thêm → pick map → modal.
+ * Edit: ✎ → modal ngay (sửa tên/địa chỉ). Muốn đổi vị trí → “Đổi vị trí trên bản đồ”.
+ */
 export function PlacesSection({ tripId }: Props) {
   const t = useTranslations("Places");
   const { data: places = [], isLoading, isError, error, refetch } = usePlaces(tripId);
@@ -47,12 +55,105 @@ export function PlacesSection({ tripId }: Props) {
 
   const [editing, setEditing] = useState<Place | null>(null);
   const [coordDraft, setCoordDraft] = useState<{ lat: number; lng: number } | null>(null);
-  const [createFormKey, setCreateFormKey] = useState(0);
+  const [textDraft, setTextDraft] = useState<{ name: string; address: string } | null>(null);
+  const [formKey, setFormKey] = useState(0);
   const [pendingDelete, setPendingDelete] = useState<Place | null>(null);
   const [deleteConflict, setDeleteConflict] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [mapMode, setMapMode] = useState<MapMode>("idle");
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successMode, setSuccessMode] = useState<"create" | "edit">("create");
+  /** Place đang được focus trên map (click list). */
+  const [focusPlaceId, setFocusPlaceId] = useState<string | null>(null);
 
   const formPending = editing ? update.isPending : create.isPending;
   const formError = editing ? update.error : create.error;
+  const formMode = editing ? "edit" : "create";
+  const pickingOnMap = mapMode === "create" || mapMode === "relocate";
+
+  function exitMapMode() {
+    if (mapMode === "relocate" && editing) {
+      // Hủy relocation → mở lại form với tọa độ cũ, giữ textDraft.
+      setMapMode("idle");
+      setCoordDraft({
+        lat: Number.parseFloat(editing.lat),
+        lng: Number.parseFloat(editing.lng),
+      });
+      setFormKey((k) => k + 1);
+      setFormOpen(true);
+      return;
+    }
+    setMapMode("idle");
+    if (!formOpen) {
+      setCoordDraft(null);
+      setEditing(null);
+      setTextDraft(null);
+    }
+  }
+
+  function closeForm() {
+    if (formPending) return;
+    setFormOpen(false);
+    setEditing(null);
+    setCoordDraft(null);
+    setTextDraft(null);
+    setMapMode("idle");
+  }
+
+  function startCreateMode() {
+    setEditing(null);
+    setTextDraft(null);
+    setFormOpen(false);
+    setCoordDraft(null);
+    setMapMode("create");
+  }
+
+  /** ✎ → mở modal ngay, không bắt chọn lại map. */
+  function openEdit(place: Place) {
+    setFocusPlaceId(place.id);
+    setMapMode("idle");
+    setEditing(place);
+    setTextDraft(null);
+    setCoordDraft({
+      lat: Number.parseFloat(place.lat),
+      lng: Number.parseFloat(place.lng),
+    });
+    setFormKey((k) => k + 1);
+    setFormOpen(true);
+  }
+
+  function focusPlace(place: Place) {
+    setFocusPlaceId(place.id);
+  }
+
+  /** Từ modal edit: tạm đóng → pick map (giữ name/address đang gõ). */
+  function startRelocate(draft: { name: string; address: string }) {
+    if (!editing) return;
+    setTextDraft(draft);
+    setFormOpen(false);
+    setCoordDraft({
+      lat: Number.parseFloat(editing.lat),
+      lng: Number.parseFloat(editing.lng),
+    });
+    setMapMode("relocate");
+  }
+
+  function openFormFromMap(coords: { lat: number; lng: number }) {
+    setCoordDraft(coords);
+    setMapMode("idle");
+    setFormKey((k) => k + 1);
+    setFormOpen(true);
+  }
+
+  function finishSave(mode: "create" | "edit") {
+    setFormOpen(false);
+    setEditing(null);
+    setCoordDraft(null);
+    setTextDraft(null);
+    setMapMode("idle");
+    setSuccessMode(mode);
+    setSuccessOpen(true);
+  }
 
   function handleSubmit(values: PlaceFormValues) {
     setDeleteConflict(null);
@@ -60,29 +161,18 @@ export function PlacesSection({ tripId }: Props) {
       update.mutate(
         { placeId: editing.id, body: toUpdatePlaceInput(values) },
         {
-          onSuccess: () => {
-            setEditing(null);
-            setCoordDraft(null);
-          },
+          onSuccess: () => finishSave("edit"),
         },
       );
       return;
     }
     create.mutate(toCreatePlaceInput(values), {
-      onSuccess: () => {
-        setCoordDraft(null);
-        setCreateFormKey((key) => key + 1);
-      },
+      onSuccess: () => finishSave("create"),
     });
   }
 
   return (
-    <section className="space-y-4">
-      <div>
-        <h2 className="text-lg font-medium text-zinc-900">{t("title")}</h2>
-        <p className="text-sm text-zinc-600">{t("subtitle")}</p>
-      </div>
-
+    <section className="flex flex-col gap-4">
       {isError && (
         <QueryError
           message={error instanceof Error ? error.message : t("loadFailed")}
@@ -93,107 +183,219 @@ export function PlacesSection({ tripId }: Props) {
       )}
 
       {deleteConflict && (
-        <InlineAlert variant="error" action={
-          <button
-            type="button"
-            className="text-xs font-medium underline"
-            onClick={() => setDeleteConflict(null)}
-          >
-            OK
-          </button>
-        }>
+        <InlineAlert
+          variant="error"
+          action={
+            <button
+              type="button"
+              className="text-xs font-medium underline"
+              onClick={() => setDeleteConflict(null)}
+            >
+              OK
+            </button>
+          }
+        >
           {deleteConflict}
         </InlineAlert>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-        <div className="order-1 min-h-0">
-          {isLoading ? (
-            <Skeleton className="h-72 w-full rounded-xl lg:min-h-80" />
-          ) : (
-            <TripMap
-              places={places}
-              draft={coordDraft}
-              onMapClick={(coords) => setCoordDraft(coords)}
-              className="h-72 w-full overflow-hidden rounded-xl border border-zinc-200 shadow-sm sm:h-80 lg:h-full lg:min-h-80"
-            />
-          )}
-          <p className="mt-2 text-xs text-zinc-500">{t("mapHint")}</p>
-        </div>
+      {pickingOnMap && (
+        <InlineAlert
+          variant="info"
+          action={
+            <button type="button" className="btn btn-secondary btn-sm" onClick={exitMapMode}>
+              {t("cancelEdit")}
+            </button>
+          }
+        >
+          {mapMode === "relocate"
+            ? t("editModeHint", { name: editing?.name ?? "" })
+            : t("createModeHint")}
+        </InlineAlert>
+      )}
 
-        <div className="order-2 space-y-4">
-          <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
-            <h3 className="mb-3 text-sm font-medium text-zinc-800">
-              {editing ? t("editTitle") : t("addTitle")}
-            </h3>
-            <PlaceForm
-              key={editing?.id ?? `create-${createFormKey}`}
-              mode={editing ? "edit" : "create"}
-              initial={editing ?? undefined}
-              coordDraft={coordDraft}
-              isPending={formPending}
-              error={formError}
-              onSubmit={handleSubmit}
-              onCancelEdit={() => {
-                setEditing(null);
-                setCoordDraft(null);
-              }}
-            />
-          </div>
+      <MobileCollapsible
+        title={t("mapEditorTitle")}
+        description={t("mapEditorHint", { count: places.length })}
+        defaultOpen={false}
+      >
+        <div
+          className={`overflow-hidden lg:rounded-2xl lg:border lg:bg-card lg:shadow-sm ${
+            pickingOnMap
+              ? "ring-2 ring-inset ring-accent/30 lg:border-accent lg:ring-accent/30"
+              : "lg:border-border"
+          }`}
+        >
+          <div className="grid lg:grid-cols-[minmax(240px,300px)_1fr] lg:items-stretch">
+            <div className="flex max-h-[min(50vh,360px)] flex-col border-b border-border lg:max-h-[520px] lg:border-r lg:border-b-0">
+              <div className="shrink-0 border-b border-border px-4 py-3">
+                <h3 className="text-sm font-semibold text-foreground">{t("title")}</h3>
+                {mapMode === "create" ? (
+                  <button
+                    type="button"
+                    className="btn btn-secondary mt-3 w-full"
+                    onClick={exitMapMode}
+                  >
+                    {t("cancelCreateMode")}
+                  </button>
+                ) : mapMode === "relocate" ? (
+                  <button
+                    type="button"
+                    className="btn btn-secondary mt-3 w-full"
+                    onClick={exitMapMode}
+                  >
+                    {t("cancelEditMode")}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn-primary mt-3 w-full"
+                    onClick={startCreateMode}
+                  >
+                    {t("addLocation")}
+                  </button>
+                )}
+              </div>
 
-          {isLoading ? (
-            <SectionBlockSkeleton rows={3} />
-          ) : (
-            <ul className="divide-y divide-zinc-200 rounded-xl border border-zinc-200 bg-white shadow-sm">
-              {places.length === 0 && (
-                <li className="px-4 py-8 text-center text-sm text-zinc-500">{t("empty")}</li>
+              <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
+                {isLoading ? (
+                  <SectionBlockSkeleton rows={4} />
+                ) : places.length === 0 ? (
+                  <p className="px-2 py-6 text-center text-sm text-muted">{t("empty")}</p>
+                ) : (
+                  places.map((place, index) => {
+                    const selected =
+                      focusPlaceId === place.id ||
+                      (formOpen && editing?.id === place.id) ||
+                      (mapMode === "relocate" && editing?.id === place.id);
+                    return (
+                      <div
+                        key={place.id}
+                        className={`rounded-xl border p-3 transition ${
+                          selected
+                            ? "border-accent bg-accent-soft"
+                            : "border-border bg-background hover:border-accent/40"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <button
+                            type="button"
+                            className="min-w-0 flex-1 text-left"
+                            onClick={() => focusPlace(place)}
+                          >
+                            <p className="truncate text-sm font-semibold text-foreground">
+                              <span className="mr-1.5 text-accent">{index + 1}.</span>
+                              {place.name}
+                            </p>
+                            {place.address ? (
+                              <p className="mt-0.5 truncate text-xs text-muted">{place.address}</p>
+                            ) : null}
+                            <p className="mt-1 font-mono text-[11px] text-muted">
+                              {place.lat}, {place.lng}
+                            </p>
+                          </button>
+                          <div className="flex shrink-0 items-center gap-0.5">
+                            <button
+                              type="button"
+                              disabled={pickingOnMap}
+                              aria-label={t("edit")}
+                              title={t("edit")}
+                              className="rounded-lg p-1.5 text-muted transition hover:bg-accent-soft hover:text-accent disabled:opacity-40"
+                              onClick={() => openEdit(place)}
+                            >
+                              <PencilIcon />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={del.isPending}
+                              aria-busy={del.isPending && pendingDelete?.id === place.id}
+                              aria-label={t("delete")}
+                              className="rounded-lg p-1.5 text-danger transition hover:bg-danger-soft disabled:opacity-60"
+                              onClick={() => {
+                                setDeleteConflict(null);
+                                setPendingDelete(place);
+                              }}
+                            >
+                              <ButtonPending
+                                pending={del.isPending && pendingDelete?.id === place.id}
+                              >
+                                <TrashIcon />
+                              </ButtonPending>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            <div
+              className={`relative min-h-[240px] bg-background sm:min-h-[320px] lg:min-h-[520px] ${
+                pickingOnMap ? "cursor-crosshair" : ""
+              }`}
+            >
+              {isLoading ? (
+                <Skeleton className="absolute inset-0 rounded-none" />
+              ) : (
+                <TripMap
+                  places={places}
+                  draft={pickingOnMap || formOpen ? coordDraft : null}
+                  focusPlaceId={focusPlaceId}
+                  onMapClick={(coords) => {
+                    if (mapMode === "create") {
+                      setEditing(null);
+                      setTextDraft(null);
+                      openFormFromMap(coords);
+                      return;
+                    }
+                    if (mapMode === "relocate" && editing) {
+                      openFormFromMap(coords);
+                    }
+                  }}
+                  className="absolute inset-0 h-full w-full rounded-none border-0"
+                />
               )}
-              {places.map((place, index) => (
-                <li key={place.id} className="flex items-start justify-between gap-3 px-4 py-3">
-                  <button
-                    type="button"
-                    className="min-w-0 flex-1 rounded-md text-left transition hover:bg-zinc-50"
-                    onClick={() => {
-                      setEditing(place);
-                      setCoordDraft({
-                        lat: Number.parseFloat(place.lat),
-                        lng: Number.parseFloat(place.lng),
-                      });
-                    }}
-                  >
-                    <p className="truncate font-medium text-zinc-900">
-                      <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-800 text-[10px] text-white">
-                        {index + 1}
-                      </span>
-                      {place.name}
-                    </p>
-                    <p className="truncate text-xs text-zinc-500">
-                      {place.lat}, {place.lng}
-                      {place.address ? ` · ${place.address}` : ""}
-                    </p>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={del.isPending}
-                    aria-busy={del.isPending && pendingDelete?.id === place.id}
-                    className="shrink-0 rounded-md px-1.5 py-1 text-sm text-red-700 transition hover:bg-red-50 disabled:opacity-60"
-                    onClick={() => {
-                      setDeleteConflict(null);
-                      setPendingDelete(place);
-                    }}
-                  >
-                    <ButtonPending
-                      pending={del.isPending && pendingDelete?.id === place.id}
-                    >
-                      {t("delete")}
-                    </ButtonPending>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+              {pickingOnMap && (
+                <div className="pointer-events-none absolute inset-x-0 top-0 z-10 bg-accent/90 px-3 py-2 text-center text-xs font-medium text-accent-foreground">
+                  {mapMode === "relocate" ? t("editModeMapBanner") : t("createModeMapBanner")}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+        <p className="border-t border-border px-4 py-2 text-xs text-muted">
+          {mapMode === "create"
+            ? t("createModeHint")
+            : mapMode === "relocate"
+              ? t("editModeHint", { name: editing?.name ?? "" })
+              : t("mapHintIdle")}
+        </p>
+      </MobileCollapsible>
+
+      <PlaceFormDialog
+        open={formOpen}
+        mode={formMode}
+        initial={editing ?? undefined}
+        coordDraft={coordDraft}
+        textDraft={textDraft}
+        isPending={formPending}
+        error={formError}
+        formKey={editing ? `${editing.id}-${formKey}` : `create-${formKey}`}
+        onClose={closeForm}
+        onSubmit={handleSubmit}
+        onRelocate={startRelocate}
+      />
+
+      <SuccessDialog
+        open={successOpen}
+        title={
+          successMode === "create" ? t("saveSuccessTitleCreate") : t("saveSuccessTitleUpdate")
+        }
+        description={t("saveSuccessBody")}
+        onClose={() => setSuccessOpen(false)}
+      />
 
       <ConfirmDialog
         open={pendingDelete !== null}
@@ -211,10 +413,7 @@ export function PlacesSection({ tripId }: Props) {
           const place = pendingDelete;
           del.mutate(place.id, {
             onSuccess: () => {
-              if (editing?.id === place.id) {
-                setEditing(null);
-                setCoordDraft(null);
-              }
+              if (editing?.id === place.id) closeForm();
               setPendingDelete(null);
             },
             onError: (err: unknown) => {
@@ -227,5 +426,22 @@ export function PlacesSection({ tripId }: Props) {
         }}
       />
     </section>
+  );
+}
+
+function PencilIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M4 7h16M9 7V5h6v2M8 7l1 12h6l1-12" />
+    </svg>
   );
 }

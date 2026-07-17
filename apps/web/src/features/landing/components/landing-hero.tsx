@@ -28,7 +28,7 @@ export async function LandingHero() {
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href="/register"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/25 transition hover:bg-accent-hover sm:w-auto"
+            className="btn btn-primary w-full shadow-lg shadow-accent/25 sm:w-auto"
           >
             {t("hero.ctaPrimary")}
             <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -37,7 +37,7 @@ export async function LandingHero() {
           </Link>
           <a
             href="#how"
-            className="inline-flex w-full items-center justify-center rounded-xl border border-border bg-surface px-6 py-3 text-sm font-semibold text-foreground transition hover:bg-card-hover sm:w-auto"
+            className="btn btn-secondary w-full sm:w-auto"
           >
             {t("hero.ctaSecondary")}
           </a>

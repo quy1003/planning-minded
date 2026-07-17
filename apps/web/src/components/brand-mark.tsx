@@ -1,15 +1,23 @@
 type Props = {
   className?: string;
   showWordmark?: boolean;
+  /**
+   * App shell hẹp: ẩn chữ TripMind trên mobile, chỉ còn pin.
+   * Landing / marketing: để false (mặc định) để luôn hiện đủ brand.
+   */
+  collapseWordmarkOnMobile?: boolean;
 };
 
 /** Logo: ghim bản đồ trắng trên nền accent + chữ TripMind. */
-export function BrandMark({ className, showWordmark = true }: Props) {
+export function BrandMark({
+  className,
+  showWordmark = true,
+  collapseWordmarkOnMobile = false,
+}: Props) {
   return (
     <span className={`inline-flex items-center gap-2.5 ${className ?? ""}`}>
       <span className="flex size-8 items-center justify-center rounded-lg bg-accent text-accent-foreground shadow-sm shadow-accent/30">
         <svg viewBox="0 0 24 24" className="size-4" aria-hidden fill="currentColor">
-          {/* Pin teardrop + lỗ tròn giữa (evenodd). */}
           <path
             fillRule="evenodd"
             clipRule="evenodd"
@@ -18,7 +26,11 @@ export function BrandMark({ className, showWordmark = true }: Props) {
         </svg>
       </span>
       {showWordmark ? (
-        <span className="font-display text-lg font-semibold tracking-tight text-foreground">
+        <span
+          className={`font-display text-lg font-semibold tracking-tight text-foreground ${
+            collapseWordmarkOnMobile ? "hidden sm:inline" : ""
+          }`}
+        >
           TripMind
         </span>
       ) : null}

@@ -11,8 +11,11 @@ export default async function TripDetailPage({ params }: Props) {
   const t = await getTranslations("Trips");
 
   return (
-    <div className="space-y-4">
-      <Link href="/trips" className="text-sm text-teal-800 hover:underline">
+    <div className="space-y-5">
+      <Link
+        href="/trips"
+        className="link-accent text-sm"
+      >
         ← {t("backToList")}
       </Link>
       <TripDetail tripId={tripId} />

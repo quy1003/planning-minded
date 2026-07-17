@@ -1,14 +1,15 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import type { DaySlot, ReorderItineraryInput } from "@tripmind/shared";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { QueryError } from "@/components/ui/query-error";
 import { SectionBlockSkeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
+import { SuccessDialog } from "@/components/ui/success-dialog";
 import { usePlaces } from "@/features/places/hooks";
+import { formatTripDayDate } from "@/features/trips/lib/trip-dates";
 import { ApiError } from "@/lib/api-client";
 import {
   useCreateItineraryItem,
@@ -23,13 +24,20 @@ import {
   type ItineraryFormValues,
 } from "../itinerary-form-schema";
 import { DAY_SLOTS, type ItineraryItem } from "../types";
-import { ItineraryForm } from "./itinerary-form";
+import { ItineraryFormDialog } from "./itinerary-form-dialog";
 import { SortableSlotList } from "./sortable-slot-list";
 
-type Props = { tripId: string; tripDays: number };
+type Props = {
+  tripId: string;
+  tripDays: number;
+  startDate: string | null;
+  /** Giữ prop để không phá TripDetail — form luôn modal. */
+  compact?: boolean;
+};
 
-export function ItinerarySection({ tripId, tripDays }: Props) {
+export function ItinerarySection({ tripId, tripDays, startDate }: Props) {
   const t = useTranslations("Itinerary");
+  const locale = useLocale();
   const { data: items = [], isLoading, isError, error, refetch } = useItinerary(tripId);
   const { data: places = [] } = usePlaces(tripId);
   const create = useCreateItineraryItem(tripId);
@@ -38,15 +46,47 @@ export function ItinerarySection({ tripId, tripDays }: Props) {
   const reorder = useReorderItinerary(tripId);
 
   const [editing, setEditing] = useState<ItineraryItem | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const [reorderError, setReorderError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ItineraryItem | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successMode, setSuccessMode] = useState<"create" | "edit">("create");
 
   const days = useMemo(
     () => Array.from({ length: tripDays }, (_, i) => i + 1),
     [tripDays],
   );
+
+  const formPending = editing ? update.isPending : create.isPending;
+  const formError = editing ? update.error : create.error;
+  const formMode = editing ? "edit" : "create";
+
+  function closeForm() {
+    if (formPending) return;
+    setFormOpen(false);
+    setEditing(null);
+  }
+
+  function finishSave(mode: "create" | "edit") {
+    setFormOpen(false);
+    setEditing(null);
+    setSuccessMode(mode);
+    setSuccessOpen(true);
+  }
+
+  function openCreate() {
+    setEditing(null);
+    setFormKey((k) => k + 1);
+    setFormOpen(true);
+  }
+
+  function openEdit(item: ItineraryItem) {
+    setEditing(item);
+    setFormKey((k) => k + 1);
+    setFormOpen(true);
+  }
 
   function nextVisitOrder(dayNumber: number, slot: DaySlot): number {
     const inSlot = items.filter((item) => item.dayNumber === dayNumber && item.slot === slot);
@@ -62,8 +102,7 @@ export function ItinerarySection({ tripId, tripDays }: Props) {
         { itemId: editing.id, body: toUpdateItineraryInput(values) },
         {
           onSuccess: () => {
-            setEditing(null);
-            setFormKey((k) => k + 1);
+            finishSave("edit");
           },
         },
       );
@@ -71,7 +110,9 @@ export function ItinerarySection({ tripId, tripDays }: Props) {
     }
     const visitOrder = nextVisitOrder(values.dayNumber, values.slot);
     create.mutate(toCreateItineraryInput(values, visitOrder), {
-      onSuccess: () => setFormKey((k) => k + 1),
+      onSuccess: () => {
+        finishSave("create");
+      },
     });
   }
 
@@ -97,18 +138,27 @@ export function ItinerarySection({ tripId, tripDays }: Props) {
   }
 
   return (
-    <section className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
+    <section className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-medium text-zinc-900">{t("title")}</h2>
-          <p className="text-sm text-zinc-600">{t("subtitle")}</p>
+          <h2 className="font-display text-xl font-semibold text-foreground">{t("title")}</h2>
+          <p className="text-sm text-muted">{t("subtitle")}</p>
         </div>
-        {reorder.isPending && (
-          <span className="inline-flex items-center text-zinc-500" aria-busy>
-            <Spinner label={t("saving")} />
-          </span>
-        )}
+        <button
+          type="button"
+          className="btn btn-primary shrink-0"
+          disabled={places.length === 0}
+          title={places.length === 0 ? t("needPlaces") : undefined}
+          onClick={openCreate}
+        >
+          <PlusIcon />
+          {t("addButton")}
+        </button>
       </div>
+
+      {places.length === 0 && (
+        <InlineAlert variant="info">{t("needPlaces")}</InlineAlert>
+      )}
 
       {isError && (
         <QueryError
@@ -151,69 +201,90 @@ export function ItinerarySection({ tripId, tripDays }: Props) {
         </InlineAlert>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-        <div className="order-1 space-y-4 lg:order-1">
-          {isLoading ? (
-            <SectionBlockSkeleton rows={5} />
-          ) : (
-            days.map((day) => (
-              <div
-                key={day}
-                className="overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50/80 shadow-sm"
-              >
-                <div className="border-b border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-800">
-                  {t("dayLabel", { day })}
+      <div className="space-y-8">
+        {isLoading ? (
+          <SectionBlockSkeleton rows={5} />
+        ) : (
+          days.map((day) => {
+            const dateLabel = formatTripDayDate(startDate, day, locale);
+            return (
+              <div key={day} className="relative pl-6 sm:pl-8">
+                <div
+                  aria-hidden
+                  className="absolute top-2 bottom-2 left-[7px] w-px bg-accent/40 sm:left-[9px]"
+                />
+                <div className="relative mb-4 flex items-center gap-3">
+                  <span className="absolute -left-6 flex size-4 items-center justify-center rounded-full border-2 border-accent bg-background sm:-left-8 sm:size-5">
+                    <span className="size-1.5 rounded-full bg-accent sm:size-2" />
+                  </span>
+                  <h3 className="font-display text-base font-semibold text-foreground">
+                    {t("dayLabel", { day })}
+                    {dateLabel ? (
+                      <span className="ml-2 text-sm font-normal text-muted">— {dateLabel}</span>
+                    ) : null}
+                  </h3>
                 </div>
-                {DAY_SLOTS.map((slot) => {
-                  const slotItems = items
-                    .filter((item) => item.dayNumber === day && item.slot === slot)
-                    .sort((a, b) => a.visitOrder - b.visitOrder);
-                  return (
-                    <div key={slot} className="border-b border-zinc-100 last:border-b-0">
-                      <div className="bg-zinc-100/80 px-3 py-1.5 text-xs font-medium tracking-wide text-zinc-600 uppercase">
-                        {t(`slots.${slot}`)}
-                      </div>
-                      <SortableSlotList
-                        dayNumber={day}
-                        slot={slot}
-                        items={slotItems}
-                        disabled={reorder.isPending || del.isPending}
-                        deletingId={del.isPending ? pendingDelete?.id : undefined}
-                        onReorder={(next) => handleGroupReorder(day, slot, next)}
-                        onEdit={setEditing}
-                        onDelete={(item) => {
-                          setDeleteError(null);
-                          setPendingDelete(item);
-                        }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            ))
-          )}
-        </div>
 
-        <div className="order-2 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm lg:sticky lg:top-4">
-          <h3 className="mb-3 text-sm font-medium text-zinc-800">
-            {editing ? t("editTitle") : t("addTitle")}
-          </h3>
-          <ItineraryForm
-            key={editing?.id ?? `create-${formKey}`}
-            mode={editing ? "edit" : "create"}
-            places={places}
-            tripDays={tripDays}
-            initial={editing ?? undefined}
-            isPending={editing ? update.isPending : create.isPending}
-            error={editing ? update.error : create.error}
-            onSubmit={handleSubmit}
-            onCancelEdit={() => {
-              setEditing(null);
-              setFormKey((k) => k + 1);
-            }}
-          />
-        </div>
+                <div className="space-y-5">
+                  {DAY_SLOTS.map((slot) => {
+                    const slotItems = items
+                      .filter((item) => item.dayNumber === day && item.slot === slot)
+                      .sort((a, b) => a.visitOrder - b.visitOrder);
+                    if (slotItems.length === 0) return null;
+                    return (
+                      <div key={slot}>
+                        <SortableSlotList
+                          dayNumber={day}
+                          slot={slot}
+                          items={slotItems}
+                          disabled={del.isPending}
+                          deletingId={del.isPending ? pendingDelete?.id : undefined}
+                          onReorder={(next) => handleGroupReorder(day, slot, next)}
+                          onEdit={openEdit}
+                          onDelete={(item) => {
+                            setDeleteError(null);
+                            setPendingDelete(item);
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                  {DAY_SLOTS.every(
+                    (slot) =>
+                      !items.some((item) => item.dayNumber === day && item.slot === slot),
+                  ) && (
+                    <p className="rounded-xl border border-dashed border-border px-3 py-4 text-xs text-muted">
+                      {t("emptyDay")}
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
+
+      <ItineraryFormDialog
+        open={formOpen}
+        mode={formMode}
+        places={places}
+        tripDays={tripDays}
+        initial={editing ?? undefined}
+        isPending={formPending}
+        error={formError}
+        formKey={editing?.id ?? `create-${formKey}`}
+        onClose={closeForm}
+        onSubmit={handleSubmit}
+      />
+
+      <SuccessDialog
+        open={successOpen}
+        title={
+          successMode === "create" ? t("saveSuccessTitleCreate") : t("saveSuccessTitleUpdate")
+        }
+        description={t("saveSuccessBody")}
+        onClose={() => setSuccessOpen(false)}
+      />
 
       <ConfirmDialog
         open={pendingDelete !== null}
@@ -231,10 +302,7 @@ export function ItinerarySection({ tripId, tripDays }: Props) {
           const item = pendingDelete;
           del.mutate(item.id, {
             onSuccess: () => {
-              if (editing?.id === item.id) {
-                setEditing(null);
-                setFormKey((k) => k + 1);
-              }
+              if (editing?.id === item.id) closeForm();
               setPendingDelete(null);
             },
             onError: (err: unknown) => {
@@ -245,5 +313,13 @@ export function ItinerarySection({ tripId, tripDays }: Props) {
         }}
       />
     </section>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
   );
 }

@@ -27,12 +27,9 @@ export function TripList() {
 
   if (!trips || trips.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-4 py-12 text-center">
-        <p className="text-sm text-zinc-600">{t("empty")}</p>
-        <Link
-          href="/trips/new"
-          className="mt-4 inline-flex rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-900"
-        >
+      <div className="panel border-dashed px-4 py-12 text-center">
+        <p className="text-sm text-muted">{t("empty")}</p>
+        <Link href="/trips/new" className="btn btn-primary mt-4">
           {t("createFirst")}
         </Link>
       </div>
@@ -41,7 +38,7 @@ export function TripList() {
 
   return (
     <ul
-      className={`divide-y divide-zinc-200 rounded-xl border border-zinc-200 bg-white shadow-sm transition-opacity ${
+      className={`panel divide-y divide-border shadow-sm transition-opacity ${
         isFetching ? "opacity-70" : ""
       }`}
     >
@@ -49,16 +46,16 @@ export function TripList() {
         <li key={trip.id}>
           <Link
             href={`/trips/${trip.id}`}
-            className="flex items-start justify-between gap-4 px-4 py-3.5 transition hover:bg-zinc-50 active:bg-zinc-100"
+            className="flex items-start justify-between gap-4 px-4 py-3.5 transition hover:bg-card-hover active:bg-accent-soft/40"
           >
             <div className="min-w-0">
-              <p className="truncate font-medium text-zinc-900">{trip.title}</p>
-              <p className="truncate text-sm text-zinc-600">
+              <p className="truncate font-medium text-foreground">{trip.title}</p>
+              <p className="truncate text-sm text-muted">
                 {trip.destinationName}
                 {trip.startDate ? ` · ${trip.startDate}` : ""}
               </p>
             </div>
-            <div className="shrink-0 text-right text-xs text-zinc-500">
+            <div className="shrink-0 text-right text-xs text-muted">
               <p>{t(`status.${trip.status}`)}</p>
               <p className="mt-1">
                 {trip.days} {t("daysShort")} · {trip.budget} {trip.currency}

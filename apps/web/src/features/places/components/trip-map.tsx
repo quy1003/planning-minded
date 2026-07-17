@@ -12,6 +12,8 @@ type Props = {
   places: Place[];
   /** Marker tạm khi đang chọn điểm trên bản đồ (form). */
   draft?: { lat: number; lng: number } | null;
+  /** Click list → map bay tới place này. */
+  focusPlaceId?: string | null;
   onMapClick?: (coords: { lat: number; lng: number }) => void;
   className?: string;
 };
@@ -20,12 +22,13 @@ function parseCoord(value: string): number {
   return Number.parseFloat(value);
 }
 
-export function TripMap({ places, draft, onMapClick, className }: Props) {
+export function TripMap({ places, draft, focusPlaceId, onMapClick, className }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markersRef = useRef<Marker[]>([]);
   const draftMarkerRef = useRef<Marker | null>(null);
   const onMapClickRef = useRef(onMapClick);
+  const didInitialFitRef = useRef(false);
 
   useEffect(() => {
     onMapClickRef.current = onMapClick;
@@ -38,7 +41,7 @@ export function TripMap({ places, draft, onMapClick, className }: Props) {
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: MAP_STYLE,
-      center: [108.45, 11.94], // Đà Lạt mặc định
+      center: [108.45, 11.94],
       zoom: 11,
     });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
@@ -55,10 +58,11 @@ export function TripMap({ places, draft, onMapClick, className }: Props) {
       draftMarkerRef.current = null;
       map.remove();
       mapRef.current = null;
+      didInitialFitRef.current = false;
     };
   }, []);
 
-  // Markers places + fit bounds
+  // Markers places (không đụng camera — camera xử lý riêng)
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -66,22 +70,37 @@ export function TripMap({ places, draft, onMapClick, className }: Props) {
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
-    const bounds = new maplibregl.LngLatBounds();
-    let hasPoint = false;
-
     places.forEach((place, index) => {
       const lat = parseCoord(place.lat);
       const lng = parseCoord(place.lng);
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
+      const focused = place.id === focusPlaceId;
       const el = document.createElement("div");
-      el.className =
-        "flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-teal-800 text-xs font-semibold text-white shadow";
+      el.className = focused
+        ? "flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-accent text-xs font-semibold text-accent-foreground shadow-lg ring-2 ring-accent ring-offset-2"
+        : "flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-accent text-xs font-semibold text-accent-foreground shadow";
       el.textContent = String(index + 1);
       el.title = place.name;
 
       const marker = new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
       markersRef.current.push(marker);
+    });
+  }, [places, focusPlaceId]);
+
+  // Lần đầu có places → fit tất cả; draft khi create/relocate cũng fit nhẹ
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (focusPlaceId) return;
+
+    const bounds = new maplibregl.LngLatBounds();
+    let hasPoint = false;
+
+    places.forEach((place) => {
+      const lat = parseCoord(place.lat);
+      const lng = parseCoord(place.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
       bounds.extend([lng, lat]);
       hasPoint = true;
     });
@@ -91,10 +110,33 @@ export function TripMap({ places, draft, onMapClick, className }: Props) {
       hasPoint = true;
     }
 
-    if (hasPoint) {
+    if (!hasPoint) return;
+
+    if (!didInitialFitRef.current || draft) {
       map.fitBounds(bounds, { padding: 48, maxZoom: 14, duration: 500 });
+      didInitialFitRef.current = true;
     }
-  }, [places, draft]);
+  }, [places, draft, focusPlaceId]);
+
+  // Click list → bay tới place
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !focusPlaceId) return;
+
+    const place = places.find((p) => p.id === focusPlaceId);
+    if (!place) return;
+
+    const lat = parseCoord(place.lat);
+    const lng = parseCoord(place.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+    map.flyTo({
+      center: [lng, lat],
+      zoom: Math.max(map.getZoom(), 14),
+      duration: 900,
+      essential: true,
+    });
+  }, [focusPlaceId, places]);
 
   // Draft marker riêng
   useEffect(() => {

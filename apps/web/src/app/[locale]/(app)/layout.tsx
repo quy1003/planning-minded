@@ -9,7 +9,7 @@ import { Link } from "@/i18n/navigation";
 
 /**
  * Route group `(app)` — khu vực đã đăng nhập (`/trips`…).
- * URL không có chữ "app". Header shell riêng (không dùng marketing footer).
+ * Header: mobile gọn (logo icon + actions); desktop đủ wordmark / nav / tên user.
  */
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const t = await getTranslations("AppShell");
@@ -17,20 +17,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <RequireAuth>
       <div className="flex min-h-full flex-1 flex-col bg-background text-foreground">
-        <header className="border-b border-border bg-surface/90 backdrop-blur">
-          <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-3 px-6">
-            <div className="flex min-w-0 items-center gap-4">
-              <Link href="/" className="shrink-0">
-                <BrandMark />
+        <header className="sticky top-0 z-40 border-b border-border bg-surface/90 backdrop-blur">
+          <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-2 px-4 sm:gap-3 sm:px-6">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <Link href="/" className="shrink-0" aria-label="TripMind">
+                <BrandMark collapseWordmarkOnMobile />
               </Link>
               <Link
                 href="/trips"
-                className="hidden text-sm text-muted transition hover:text-foreground sm:inline"
+                className="hidden truncate text-sm text-muted transition hover:text-foreground md:inline"
               >
                 {t("navTrips")}
               </Link>
             </div>
-            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
               <LocaleSwitcher />
               <ThemeToggle />
               <AppShellUser />
@@ -38,7 +38,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </div>
           </div>
         </header>
-        <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-8">{children}</div>
+        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-6 sm:px-6 sm:py-8">
+          {children}
+        </div>
       </div>
     </RequireAuth>
   );

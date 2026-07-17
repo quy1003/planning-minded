@@ -16,7 +16,7 @@ export function ButtonPending({ pending, children, onDark }: Props) {
       <span className="inline-flex items-center justify-center">
         <Spinner
           className={
-            onDark ? "border-white/35 border-t-white" : "border-zinc-300 border-t-teal-800"
+            onDark ? "border-white/35 border-t-white" : "border-border border-t-accent"
           }
         />
         <span className="sr-only">{children}</span>

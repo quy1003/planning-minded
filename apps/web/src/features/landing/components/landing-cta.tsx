@@ -16,13 +16,13 @@ export async function LandingCta() {
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href="/register"
-            className="inline-flex w-full items-center justify-center rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground transition hover:bg-accent-hover sm:w-auto"
+            className="btn btn-primary w-full sm:w-auto"
           >
             {t("cta.primary")}
           </Link>
           <a
             href="#pricing"
-            className="inline-flex w-full items-center justify-center rounded-xl border border-border bg-surface px-6 py-3 text-sm font-semibold text-foreground transition hover:bg-card-hover sm:w-auto"
+            className="btn btn-secondary w-full sm:w-auto"
           >
             {t("cta.secondary")}
           </a>

@@ -15,18 +15,21 @@ export function DeleteTripButton({ tripId, title }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
+    <>
       <button
         type="button"
         disabled={del.isPending}
         aria-busy={del.isPending}
-        className="rounded-md border border-red-200 bg-white px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-50 disabled:opacity-60"
+        className="btn btn-danger w-full sm:w-auto"
         onClick={() => {
           del.reset();
           setOpen(true);
         }}
       >
-        <ButtonPending pending={del.isPending}>{t("delete")}</ButtonPending>
+        <ButtonPending pending={del.isPending} onDark>
+          <TrashIcon />
+          {t("delete")}
+        </ButtonPending>
       </button>
 
       {del.isError && (
@@ -50,6 +53,14 @@ export function DeleteTripButton({ tripId, title }: Props) {
           });
         }}
       />
-    </div>
+    </>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M4 7h16M9 7V5h6v2M8 7l1 12h6l1-12" />
+    </svg>
   );
 }

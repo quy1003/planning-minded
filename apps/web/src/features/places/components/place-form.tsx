@@ -9,39 +9,69 @@ import { ApiError } from "@/lib/api-client";
 import { placeFormSchema, type PlaceFormValues } from "../place-form-schema";
 import type { Place } from "../types";
 
+type TextDraft = { name: string; address: string };
+
 type Props = {
   mode: "create" | "edit";
   initial?: Place;
-  /** Đồng bộ từ click map / chọn list. */
+  /** Tọa độ từ map — ưu tiên khi mở form. */
   coordDraft?: { lat: number; lng: number } | null;
+  /** Giữ name/address khi vừa chọn lại vị trí trên map. */
+  textDraft?: TextDraft | null;
   isPending: boolean;
   error: unknown;
   onSubmit: (values: PlaceFormValues) => void;
-  onCancelEdit?: () => void;
+  onCancel?: () => void;
+  /** Chỉ edit: tạm đóng form → click map đổi vị trí. */
+  onRelocate?: (draft: TextDraft) => void;
 };
+
+function resolveCoords(
+  initial: Place | undefined,
+  coordDraft: { lat: number; lng: number } | null | undefined,
+): { lat: number; lng: number } {
+  if (coordDraft) {
+    return {
+      lat: Number(coordDraft.lat.toFixed(6)),
+      lng: Number(coordDraft.lng.toFixed(6)),
+    };
+  }
+  if (initial) {
+    return {
+      lat: Number.parseFloat(initial.lat),
+      lng: Number.parseFloat(initial.lng),
+    };
+  }
+  return { lat: 11.94, lng: 108.45 };
+}
 
 export function PlaceForm({
   mode,
   initial,
   coordDraft,
+  textDraft,
   isPending,
   error,
   onSubmit,
-  onCancelEdit,
+  onCancel,
+  onRelocate,
 }: Props) {
   const t = useTranslations("Places");
+  const tCommon = useTranslations("Common");
+  const coords = resolveCoords(initial, coordDraft);
   const {
     register,
     handleSubmit,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<PlaceFormValues>({
     resolver: zodResolver(placeFormSchema),
     defaultValues: {
-      name: initial?.name ?? "",
-      address: initial?.address ?? "",
-      lat: initial ? Number.parseFloat(initial.lat) : 11.94,
-      lng: initial ? Number.parseFloat(initial.lng) : 108.45,
+      name: textDraft?.name ?? initial?.name ?? "",
+      address: textDraft?.address ?? initial?.address ?? "",
+      lat: coords.lat,
+      lng: coords.lng,
     },
   });
 
@@ -50,14 +80,6 @@ export function PlaceForm({
     setValue("lat", Number(coordDraft.lat.toFixed(6)), { shouldValidate: true });
     setValue("lng", Number(coordDraft.lng.toFixed(6)), { shouldValidate: true });
   }, [coordDraft, setValue]);
-
-  useEffect(() => {
-    if (!initial) return;
-    setValue("name", initial.name);
-    setValue("address", initial.address ?? "");
-    setValue("lat", Number.parseFloat(initial.lat));
-    setValue("lng", Number.parseFloat(initial.lng));
-  }, [initial, setValue]);
 
   const serverError =
     error instanceof ApiError ? error.message : error ? t("saveFailed") : null;
@@ -70,49 +92,70 @@ export function PlaceForm({
       <Field label={t("fields.address")} error={errors.address?.message}>
         <input className={inputClass} {...register("address")} autoComplete="off" />
       </Field>
-      <div className="grid grid-cols-2 gap-3">
-        <Field label={t("fields.lat")} error={errors.lat?.message}>
-          <input type="number" step="any" className={inputClass} {...register("lat")} />
-        </Field>
-        <Field label={t("fields.lng")} error={errors.lng?.message}>
-          <input type="number" step="any" className={inputClass} {...register("lng")} />
-        </Field>
+
+      <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-3">
+          <Field label={t("fields.lat")} error={errors.lat?.message}>
+            <input
+              type="text"
+              inputMode="decimal"
+              readOnly
+              className={`${inputClass} font-mono`}
+              {...register("lat", { valueAsNumber: true })}
+            />
+          </Field>
+          <Field label={t("fields.lng")} error={errors.lng?.message}>
+            <input
+              type="text"
+              inputMode="decimal"
+              readOnly
+              className={`${inputClass} font-mono`}
+              {...register("lng", { valueAsNumber: true })}
+            />
+          </Field>
+        </div>
+        {onRelocate && (
+          <button
+            type="button"
+            disabled={isPending}
+            className="btn btn-accent-soft btn-sm w-full"
+            onClick={() => {
+              const values = getValues();
+              onRelocate({
+                name: values.name ?? "",
+                address: values.address ?? "",
+              });
+            }}
+          >
+            <MapPinIcon />
+            {t("relocateOnMap")}
+          </button>
+        )}
       </div>
-      <p className="text-xs text-zinc-500">{t("mapHint")}</p>
 
       {serverError && (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+        <p className="rounded-md border border-danger-border bg-danger-soft px-3 py-2 text-sm text-danger">
           {serverError}
         </p>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="submit"
-          disabled={isPending}
-          aria-busy={isPending}
-          className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900 disabled:opacity-60"
-        >
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {onCancel && (
+          <button type="button" onClick={onCancel} className="btn btn-secondary" disabled={isPending}>
+            {tCommon("cancel")}
+          </button>
+        )}
+        <button type="submit" disabled={isPending} aria-busy={isPending} className="btn btn-primary">
           <ButtonPending pending={isPending} onDark>
             {mode === "create" ? t("addSubmit") : t("saveSubmit")}
           </ButtonPending>
         </button>
-        {mode === "edit" && onCancelEdit && (
-          <button
-            type="button"
-            onClick={onCancelEdit}
-            className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
-          >
-            {t("cancelEdit")}
-          </button>
-        )}
       </div>
     </form>
   );
 }
 
-const inputClass =
-  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20";
+const inputClass = "input-field";
 
 function Field({
   label,
@@ -125,9 +168,18 @@ function Field({
 }) {
   return (
     <div className="space-y-1">
-      <label className="text-sm font-medium text-zinc-800">{label}</label>
+      <label className="text-sm font-medium text-foreground">{label}</label>
       {children}
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="text-xs text-danger">{error}</p>}
     </div>
+  );
+}
+
+function MapPinIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M12 21s7-4.5 7-10a7 7 0 1 0-14 0c0 5.5 7 10 7 10Z" />
+      <circle cx="12" cy="11" r="2.5" />
+    </svg>
   );
 }

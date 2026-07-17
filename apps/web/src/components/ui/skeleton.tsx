@@ -7,14 +7,14 @@ export function Skeleton({ className }: Props) {
   return (
     <div
       aria-hidden
-      className={`animate-pulse rounded-md bg-zinc-200/80 ${className ?? ""}`}
+      className={`animate-pulse rounded-md bg-border/80 ${className ?? ""}`}
     />
   );
 }
 
 export function TripListSkeleton() {
   return (
-    <ul className="divide-y divide-zinc-200 rounded-lg border border-zinc-200 bg-white">
+    <ul className="panel divide-y divide-border">
       {Array.from({ length: 4 }, (_, i) => (
         <li key={i} className="flex items-start justify-between gap-4 px-4 py-3">
           <div className="min-w-0 flex-1 space-y-2">

@@ -15,12 +15,14 @@ type Props = {
   isPending: boolean;
   error: unknown;
   onSubmit: (values: TripFormValues) => void;
+  onCancel?: () => void;
 };
 
 const statuses = ["DRAFT", "PLANNED", "COMPLETED"] as const;
 
-export function TripForm({ mode, initial, isPending, error, onSubmit }: Props) {
+export function TripForm({ mode, initial, isPending, error, onSubmit, onCancel }: Props) {
   const t = useTranslations("Trips");
+  const tCommon = useTranslations("Common");
   const {
     register,
     handleSubmit,
@@ -94,27 +96,28 @@ export function TripForm({ mode, initial, isPending, error, onSubmit }: Props) {
       </Field>
 
       {serverError && (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+        <p className="rounded-md border border-danger-border bg-danger-soft px-3 py-2 text-sm text-danger">
           {serverError}
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={isPending}
-        aria-busy={isPending}
-        className="rounded-md bg-teal-800 px-4 py-2.5 text-sm font-medium text-white hover:bg-teal-900 disabled:opacity-60"
-      >
-        <ButtonPending pending={isPending} onDark>
-          {mode === "create" ? t("createSubmit") : t("saveSubmit")}
-        </ButtonPending>
-      </button>
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {onCancel && (
+          <button type="button" onClick={onCancel} className="btn btn-secondary" disabled={isPending}>
+            {tCommon("cancel")}
+          </button>
+        )}
+        <button type="submit" disabled={isPending} aria-busy={isPending} className="btn btn-primary">
+          <ButtonPending pending={isPending} onDark>
+            {mode === "create" ? t("createSubmit") : t("saveSubmit")}
+          </ButtonPending>
+        </button>
+      </div>
     </form>
   );
 }
 
-const inputClass =
-  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20";
+const inputClass = "input-field";
 
 function Field({
   label,

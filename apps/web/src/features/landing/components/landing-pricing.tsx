@@ -32,7 +32,7 @@ export async function LandingPricing() {
           </ul>
           <Link
             href="/register"
-            className="mt-8 flex w-full items-center justify-center rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-accent-foreground transition hover:bg-accent-hover"
+            className="btn btn-primary mt-8 w-full"
           >
             {t("pricing.cta")}
           </Link>

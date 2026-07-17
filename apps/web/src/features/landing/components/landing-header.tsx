@@ -33,13 +33,13 @@ export function LandingHeader() {
           <ThemeToggle />
           <Link
             href="/login"
-            className="rounded-lg px-3 py-2 text-sm font-medium text-foreground transition hover:bg-accent-soft"
+            className="btn btn-ghost btn-sm"
           >
             {t("nav.signIn")}
           </Link>
           <Link
             href="/register"
-            className="rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-accent-foreground transition hover:bg-accent-hover"
+            className="btn btn-primary btn-sm"
           >
             {t("nav.getStarted")}
           </Link>
@@ -82,14 +82,14 @@ export function LandingHeader() {
             <ThemeToggle />
             <Link
               href="/login"
-              className="rounded-lg px-3 py-2 text-sm font-medium"
+              className="btn btn-ghost btn-sm"
               onClick={() => setOpen(false)}
             >
               {t("nav.signIn")}
             </Link>
             <Link
               href="/register"
-              className="rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-accent-foreground"
+              className="btn btn-primary btn-sm"
               onClick={() => setOpen(false)}
             >
               {t("nav.getStarted")}

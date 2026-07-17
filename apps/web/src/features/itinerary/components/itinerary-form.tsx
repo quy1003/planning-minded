@@ -24,7 +24,7 @@ type Props = {
   isPending: boolean;
   error: unknown;
   onSubmit: (values: ItineraryFormValues) => void;
-  onCancelEdit?: () => void;
+  onCancel?: () => void;
 };
 
 export function ItineraryForm({
@@ -37,9 +37,10 @@ export function ItineraryForm({
   isPending,
   error,
   onSubmit,
-  onCancelEdit,
+  onCancel,
 }: Props) {
   const t = useTranslations("Itinerary");
+  const tCommon = useTranslations("Common");
   const {
     register,
     handleSubmit,
@@ -132,38 +133,28 @@ export function ItineraryForm({
       </Field>
 
       {serverError && (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+        <p className="rounded-md border border-danger-border bg-danger-soft px-3 py-2 text-sm text-danger">
           {serverError}
         </p>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="submit"
-          disabled={isPending}
-          aria-busy={isPending}
-          className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900 disabled:opacity-60"
-        >
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {onCancel && (
+          <button type="button" onClick={onCancel} className="btn btn-secondary" disabled={isPending}>
+            {tCommon("cancel")}
+          </button>
+        )}
+        <button type="submit" disabled={isPending} aria-busy={isPending} className="btn btn-primary">
           <ButtonPending pending={isPending} onDark>
             {mode === "create" ? t("addSubmit") : t("saveSubmit")}
           </ButtonPending>
         </button>
-        {mode === "edit" && onCancelEdit && (
-          <button
-            type="button"
-            onClick={onCancelEdit}
-            className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
-          >
-            {t("cancelEdit")}
-          </button>
-        )}
       </div>
     </form>
   );
 }
 
-const inputClass =
-  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20";
+const inputClass = "input-field";
 
 function Field({
   label,
@@ -176,9 +167,9 @@ function Field({
 }) {
   return (
     <div className="space-y-1">
-      <label className="text-sm font-medium text-zinc-800">{label}</label>
+      <label className="text-sm font-medium text-foreground">{label}</label>
       {children}
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="text-xs text-danger">{error}</p>}
     </div>
   );
 }

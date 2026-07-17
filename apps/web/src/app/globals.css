@@ -3,38 +3,69 @@
 /* Tailwind v4: dark: theo class .dark trên <html> (next-themes). */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+  Design tokens — TripMind
+  Primary = blue (CTA). Không dùng teal cho button.
+  Radius scale thống nhất qua --radius-*.
+*/
 :root {
-  --background: #f4f6fb;
+  --background: #f5f7fb;
   --foreground: #0f172a;
   --surface: #ffffff;
   --muted: #64748b;
   --border: #e2e8f0;
+  --card: #ffffff;
+  --card-hover: #f8fafc;
+
   --accent: #2563eb;
   --accent-hover: #1d4ed8;
   --accent-foreground: #ffffff;
-  --accent-soft: rgba(37, 99, 235, 0.12);
-  --hero-glow: rgba(37, 99, 235, 0.18);
-  --card: #ffffff;
-  --card-hover: #f8fafc;
+  --accent-soft: rgba(37, 99, 235, 0.1);
+  --hero-glow: rgba(37, 99, 235, 0.2);
   --ring: rgba(37, 99, 235, 0.35);
+
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --danger-foreground: #ffffff;
+  --danger-soft: rgba(220, 38, 38, 0.1);
+  --danger-border: rgba(220, 38, 38, 0.25);
+
   --success: #16a34a;
+  --success-soft: rgba(22, 163, 74, 0.12);
+  --success-foreground: #14532d;
+
+  --radius-sm: 0.375rem; /* 6px — badge, chip */
+  --radius-md: 0.625rem; /* 10px — button, input */
+  --radius-lg: 0.875rem; /* 14px — card nhỏ */
+  --radius-xl: 1.25rem; /* 20px — panel, dialog */
+  --radius-2xl: 1.5rem; /* 24px — hero / map shell */
 }
 
 .dark {
-  --background: #000000;
+  --background: #05070c;
   --foreground: #f8fafc;
-  --surface: #0a0a0a;
+  --surface: #0c1018;
   --muted: #94a3b8;
   --border: #1e293b;
+  --card: #0c1018;
+  --card-hover: #141a24;
+
   --accent: #3b82f6;
   --accent-hover: #60a5fa;
   --accent-foreground: #ffffff;
-  --accent-soft: rgba(59, 130, 246, 0.15);
+  --accent-soft: rgba(59, 130, 246, 0.16);
   --hero-glow: rgba(59, 130, 246, 0.28);
-  --card: #0a0a0a;
-  --card-hover: #111827;
   --ring: rgba(59, 130, 246, 0.45);
-  --success: #22c55e;
+
+  --danger: #ef4444;
+  --danger-hover: #f87171;
+  --danger-foreground: #ffffff;
+  --danger-soft: rgba(239, 68, 68, 0.16);
+  --danger-border: rgba(239, 68, 68, 0.35);
+
+  --success: #4ade80;
+  --success-soft: rgba(74, 222, 128, 0.14);
+  --success-foreground: #dcfce7;
 }
 
 @theme inline {
@@ -50,7 +81,19 @@
   --color-card: var(--card);
   --color-card-hover: var(--card-hover);
   --color-ring: var(--ring);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-border: var(--danger-border);
   --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-foreground: var(--success-foreground);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-outfit);
@@ -60,4 +103,121 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* —— Button / input utilities (dùng chung toàn app) —— */
+
+@utility btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-md);
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 600;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    opacity 0.15s ease;
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@utility btn-primary {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+  &:hover:not(:disabled) {
+    background-color: var(--accent-hover);
+  }
+}
+
+/* Hủy / secondary — nền xám, chữ foreground (không đỏ/xanh). */
+@utility btn-secondary {
+  border: 1px solid var(--border);
+  background-color: color-mix(in srgb, var(--muted) 16%, var(--surface));
+  color: var(--foreground);
+  &:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--muted) 24%, var(--surface));
+  }
+}
+
+@utility btn-danger {
+  background-color: var(--danger);
+  color: var(--danger-foreground);
+  &:hover:not(:disabled) {
+    background-color: var(--danger-hover);
+  }
+}
+
+@utility btn-danger-outline {
+  border: 1px solid var(--danger-border);
+  background-color: var(--surface);
+  color: var(--danger);
+  &:hover:not(:disabled) {
+    background-color: var(--danger-soft);
+  }
+}
+
+/* Action phụ gắn accent (vd đổi vị trí map) — không cạnh tranh nút Lưu primary. */
+@utility btn-accent-soft {
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  background-color: var(--accent-soft);
+  color: var(--accent);
+  &:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--accent) 18%, transparent);
+    border-color: var(--accent);
+  }
+}
+
+/* Ghost — chữ muted; dùng cho đóng nhỏ trên header, không thay secondary. */
+@utility btn-ghost {
+  background-color: transparent;
+  color: var(--muted);
+  &:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--muted) 12%, transparent);
+    color: var(--foreground);
+  }
+}
+
+@utility btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+@utility input-field {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--foreground);
+  outline: none;
+  &:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+}
+
+@utility link-accent {
+  color: var(--accent);
+  font-weight: 500;
+  text-underline-offset: 2px;
+  &:hover {
+    text-decoration: underline;
+    color: var(--accent-hover);
+  }
+}
+
+@utility panel {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  background-color: var(--card);
 }

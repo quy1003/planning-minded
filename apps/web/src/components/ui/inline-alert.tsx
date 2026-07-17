@@ -3,9 +3,9 @@ import type { ReactNode } from "react";
 type Variant = "error" | "success" | "info";
 
 const styles: Record<Variant, string> = {
-  error: "border-red-200 bg-red-50 text-red-800",
-  success: "border-teal-200 bg-teal-50 text-teal-900",
-  info: "border-zinc-200 bg-zinc-50 text-zinc-700",
+  error: "border-danger-border bg-danger-soft text-danger",
+  success: "border-success/30 bg-success-soft text-success-foreground",
+  info: "border-border bg-card text-muted",
 };
 
 type Props = {

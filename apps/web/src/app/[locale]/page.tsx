@@ -1,6 +1,0 @@
-import { LandingPage } from "@/features/landing/components/landing-page";
-
-/** Marketing home — không bắt login. */
-export default async function LocaleHomePage() {
-  return <LandingPage />;
-}

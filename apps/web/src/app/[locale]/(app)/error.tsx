@@ -24,7 +24,7 @@ export default function AppError({ error, reset }: Props) {
         action={
           <button
             type="button"
-            className="rounded-md border border-red-300 bg-white px-2.5 py-1 text-xs font-medium text-red-800 hover:bg-red-100"
+            className="btn btn-secondary btn-sm border-danger-border text-danger hover:bg-danger-soft"
             onClick={reset}
           >
             {t("retry")}

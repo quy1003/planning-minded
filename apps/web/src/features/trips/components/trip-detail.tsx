@@ -1,25 +1,28 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { QueryError } from "@/components/ui/query-error";
 import { TripDetailSkeleton } from "@/components/ui/skeleton";
-import { SuccessDialog } from "@/components/ui/success-dialog";
 import { ItinerarySection } from "@/features/itinerary/components/itinerary-section";
+import { useItinerary } from "@/features/itinerary/hooks";
 import { PlacesSection } from "@/features/places/components/places-section";
+import { usePlaces } from "@/features/places/hooks";
 import { ApiError } from "@/lib/api-client";
-import { useTrip, useUpdateTrip } from "../hooks";
-import { toUpdateTripInput } from "../trip-form-schema";
-import { DeleteTripButton } from "./delete-trip-button";
-import { TripForm } from "./trip-form";
+import { useTrip } from "../hooks";
+import { TripHero } from "./trip-hero";
+import { TripSummarySidebar } from "./trip-summary-sidebar";
 
 type Props = { tripId: string };
 
+/**
+ * Mobile: một cột flex gap-4 đều (Summary tabs + Map + Itinerary).
+ * Desktop: grid 2 cột; `lg:contents` để Summary/Map tham gia grid cha.
+ */
 export function TripDetail({ tripId }: Props) {
   const t = useTranslations("Trips");
   const { data: trip, isLoading, isError, error, refetch } = useTrip(tripId);
-  const update = useUpdateTrip(tripId);
-  const [saveSuccessOpen, setSaveSuccessOpen] = useState(false);
+  const { data: places = [] } = usePlaces(tripId);
+  const { data: items = [] } = useItinerary(tripId);
 
   if (isLoading) {
     return <TripDetailSkeleton />;
@@ -43,40 +46,33 @@ export function TripDetail({ tripId }: Props) {
   }
 
   return (
-    <div className="space-y-10">
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">{trip.title}</h1>
-          <p className="text-zinc-600">{trip.destinationName}</p>
-        </div>
-        <DeleteTripButton tripId={trip.id} title={trip.title} />
+    <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)] lg:items-start lg:gap-8">
+      <div className="lg:col-span-full">
+        <TripHero trip={trip} />
       </div>
 
-      <PlacesSection tripId={trip.id} />
+      {/*
+        Mobile: flex gap-4 — khoảng cách tab Summary ↔ Map đều.
+        Desktop: contents — Summary/Places trở thành ô lưới của cha.
+      */}
+      <div className="flex flex-col gap-4 lg:contents">
+        <aside className="lg:col-start-2 lg:row-start-3 lg:self-start lg:top-20">
+          <TripSummarySidebar trip={trip} items={items} placeCount={places.length} />
+        </aside>
 
-      <ItinerarySection tripId={trip.id} tripDays={trip.days} />
+        <div className="lg:col-span-full">
+          <PlacesSection tripId={trip.id} />
+        </div>
+      </div>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-medium text-zinc-900">{t("editSection")}</h2>
-        <TripForm
-          mode="edit"
-          initial={trip}
-          isPending={update.isPending}
-          error={update.error}
-          onSubmit={(values) =>
-            update.mutate(toUpdateTripInput(values), {
-              onSuccess: () => setSaveSuccessOpen(true),
-            })
-          }
+      <div className="lg:col-start-1 lg:row-start-3">
+        <ItinerarySection
+          tripId={trip.id}
+          tripDays={trip.days}
+          startDate={trip.startDate}
+          compact
         />
-      </section>
-
-      <SuccessDialog
-        open={saveSuccessOpen}
-        title={t("saveSuccessTitle")}
-        description={t("saveSuccessBody")}
-        onClose={() => setSaveSuccessOpen(false)}
-      />
+      </div>
     </div>
   );
 }

@@ -27,7 +27,22 @@ Demo: `demo@tripmind.local` / `password123`
 - Trips CRUD, places + MapLibre, itinerary + dnd-kit reorder
 - **next-intl**: `messages/{vi,en}.json`
 
-## UX conventions (Slice 5)
+## Design tokens
+
+Nguồn: `src/app/globals.css` (light/dark).
+
+| Class | Dùng cho |
+|-------|----------|
+| `btn btn-primary` | CTA chính (blue) |
+| `btn btn-secondary` | Hủy / secondary |
+| `btn btn-danger` / `btn-danger-outline` | Xóa |
+| `btn-ghost` / `btn-sm` | Nav nhẹ / nút nhỏ |
+| `input-field` | Mọi input/select |
+| `link-accent` | Link trong text |
+| `panel` | Card / hộp nội dung |
+
+Radius: `--radius-sm` → `--radius-2xl` (button/input = `md` ~10px). **Không** dùng `teal-*` cho button.
+
 
 Dùng shared UI trong `src/components/ui/` — **không** `window.confirm` / `alert` cho luồng chính:
 
