@@ -48,6 +48,7 @@ export function ItinerarySection({ tripId, tripDays, startDate }: Props) {
   const [editing, setEditing] = useState<ItineraryItem | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [formKey, setFormKey] = useState(0);
+  const [createDay, setCreateDay] = useState(1);
   const [reorderError, setReorderError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ItineraryItem | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -76,8 +77,9 @@ export function ItinerarySection({ tripId, tripDays, startDate }: Props) {
     setSuccessOpen(true);
   }
 
-  function openCreate() {
+  function openCreate(day: number = 1) {
     setEditing(null);
+    setCreateDay(day);
     setFormKey((k) => k + 1);
     setFormOpen(true);
   }
@@ -132,6 +134,10 @@ export function ItinerarySection({ tripId, tripDays, startDate }: Props) {
           setReorderError(t("conflictOrder"));
           return;
         }
+        if (err instanceof ApiError && err.status === 422) {
+          setReorderError(t("timeOrderConflict"));
+          return;
+        }
         setReorderError(err instanceof Error ? err.message : t("reorderFailed"));
       },
     });
@@ -149,7 +155,7 @@ export function ItinerarySection({ tripId, tripDays, startDate }: Props) {
           className="btn btn-primary shrink-0"
           disabled={places.length === 0}
           title={places.length === 0 ? t("needPlaces") : undefined}
-          onClick={openCreate}
+          onClick={() => openCreate()}
         >
           <PlusIcon />
           {t("addButton")}
@@ -213,16 +219,28 @@ export function ItinerarySection({ tripId, tripDays, startDate }: Props) {
                   aria-hidden
                   className="absolute top-2 bottom-2 left-[7px] w-px bg-accent/40 sm:left-[9px]"
                 />
-                <div className="relative mb-4 flex items-center gap-3">
-                  <span className="absolute -left-6 flex size-4 items-center justify-center rounded-full border-2 border-accent bg-background sm:-left-8 sm:size-5">
-                    <span className="size-1.5 rounded-full bg-accent sm:size-2" />
-                  </span>
-                  <h3 className="font-display text-base font-semibold text-foreground">
-                    {t("dayLabel", { day })}
-                    {dateLabel ? (
-                      <span className="ml-2 text-sm font-normal text-muted">— {dateLabel}</span>
-                    ) : null}
-                  </h3>
+                <div className="relative mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="absolute -left-6 flex size-4 items-center justify-center rounded-full border-2 border-accent bg-background sm:-left-8 sm:size-5">
+                      <span className="size-1.5 rounded-full bg-accent sm:size-2" />
+                    </span>
+                    <h3 className="font-display text-base font-semibold text-foreground">
+                      {t("dayLabel", { day })}
+                      {dateLabel ? (
+                        <span className="ml-2 text-sm font-normal text-muted">— {dateLabel}</span>
+                      ) : null}
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm shrink-0"
+                    disabled={places.length === 0}
+                    title={places.length === 0 ? t("needPlaces") : undefined}
+                    onClick={() => openCreate(day)}
+                  >
+                    <PlusIcon />
+                    {t("addButton")}
+                  </button>
                 </div>
 
                 <div className="space-y-5">
@@ -270,6 +288,7 @@ export function ItinerarySection({ tripId, tripDays, startDate }: Props) {
         places={places}
         tripDays={tripDays}
         initial={editing ?? undefined}
+        defaultDay={editing ? undefined : createDay}
         isPending={formPending}
         error={formError}
         formKey={editing?.id ?? `create-${formKey}`}

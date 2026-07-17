@@ -1,4 +1,4 @@
-import { daySlotSchema } from "@tripmind/shared";
+import { daySlotSchema, isTimeInSlot } from "@tripmind/shared";
 import { z } from "zod";
 
 const optionalTime = z
@@ -6,20 +6,44 @@ const optionalTime = z
   .regex(/^$|^([01]\d|2[0-3]):[0-5]\d$/, "HH:mm")
   .optional();
 
-export const itineraryFormSchema = z.object({
-  placeId: z.string().uuid("Chọn một địa điểm"),
-  dayNumber: z.coerce.number().int().min(1).max(60),
-  slot: daySlotSchema,
-  title: z.string().min(1).max(200),
-  description: z.string().max(2000).optional(),
-  startTime: optionalTime,
-  endTime: optionalTime,
-  durationMin: z.string().optional(),
-  estCost: z
-    .string()
-    .regex(/^$|^\d+(\.\d{1,2})?$/, "số thập phân")
-    .optional(),
-});
+export const itineraryFormSchema = z
+  .object({
+    placeId: z.string().uuid("Chọn một địa điểm"),
+    dayNumber: z.coerce.number().int().min(1).max(60),
+    slot: daySlotSchema,
+    title: z.string().min(1).max(200),
+    description: z.string().max(2000).optional(),
+    startTime: optionalTime,
+    endTime: optionalTime,
+    durationMin: z.string().optional(),
+    estCost: z
+      .string()
+      .regex(/^$|^\d+(\.\d{1,2})?$/, "số thập phân")
+      .optional(),
+  })
+  .superRefine(({ slot, startTime, endTime }, ctx) => {
+    if (startTime && !isTimeInSlot(startTime, slot)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["startTime"],
+        message: "Giờ bắt đầu không khớp buổi đã chọn",
+      });
+    }
+    if (endTime && !isTimeInSlot(endTime, slot)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["endTime"],
+        message: "Giờ kết thúc không khớp buổi đã chọn",
+      });
+    }
+    if (startTime && endTime && endTime <= startTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["endTime"],
+        message: "Giờ kết thúc phải sau giờ bắt đầu",
+      });
+    }
+  });
 
 export type ItineraryFormValues = z.infer<typeof itineraryFormSchema>;
 

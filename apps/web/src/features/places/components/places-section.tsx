@@ -11,6 +11,7 @@ import { QueryError } from "@/components/ui/query-error";
 import { SectionBlockSkeleton, Skeleton } from "@/components/ui/skeleton";
 import { SuccessDialog } from "@/components/ui/success-dialog";
 import { ApiError } from "@/lib/api-client";
+import { useItinerary } from "@/features/itinerary/hooks";
 import {
   useCreatePlace,
   useDeletePlace,
@@ -38,7 +39,10 @@ const TripMap = dynamic(
   },
 );
 
-type Props = { tripId: string };
+type Props = { tripId: string; tripDays: number };
+
+/** Tab map: số ngày | "all" = mọi địa điểm không polyline. */
+type MapDayTab = number | "all";
 
 type MapMode = "idle" | "create" | "relocate";
 
@@ -46,9 +50,11 @@ type MapMode = "idle" | "create" | "relocate";
  * Create: Thêm → pick map → modal.
  * Edit: ✎ → modal ngay (sửa tên/địa chỉ). Muốn đổi vị trí → “Đổi vị trí trên bản đồ”.
  */
-export function PlacesSection({ tripId }: Props) {
+export function PlacesSection({ tripId, tripDays }: Props) {
   const t = useTranslations("Places");
   const { data: places = [], isLoading, isError, error, refetch } = usePlaces(tripId);
+  // Cùng query key với ItinerarySection → TanStack cache, không gọi API thừa.
+  const { data: itineraryItems = [] } = useItinerary(tripId);
   const create = useCreatePlace(tripId);
   const update = useUpdatePlace(tripId);
   const del = useDeletePlace(tripId);
@@ -65,11 +71,17 @@ export function PlacesSection({ tripId }: Props) {
   const [successMode, setSuccessMode] = useState<"create" | "edit">("create");
   /** Place đang được focus trên map (click list). */
   const [focusPlaceId, setFocusPlaceId] = useState<string | null>(null);
+  const [mapDayTab, setMapDayTab] = useState<MapDayTab>(1);
 
   const formPending = editing ? update.isPending : create.isPending;
   const formError = editing ? update.error : create.error;
   const formMode = editing ? "edit" : "create";
   const pickingOnMap = mapMode === "create" || mapMode === "relocate";
+
+  const dayCount = Math.max(1, tripDays);
+  /** Lúc pick: hiện mọi place, tắt route. Tab ngày: filterDay = số. Tab all: null. */
+  const filterDay = pickingOnMap || mapDayTab === "all" ? null : mapDayTab;
+  const showRoutes = !pickingOnMap && mapDayTab !== "all";
 
   function exitMapMode() {
     if (mapMode === "relocate" && editing) {
@@ -124,6 +136,13 @@ export function PlacesSection({ tripId }: Props) {
 
   function focusPlace(place: Place) {
     setFocusPlaceId(place.id);
+    // Place không thuộc ngày đang xem → chuyển tab “Tất cả” để marker hiện được.
+    if (typeof mapDayTab === "number") {
+      const onDay = itineraryItems.some(
+        (item) => item.placeId === place.id && item.dayNumber === mapDayTab,
+      );
+      if (!onDay) setMapDayTab("all");
+    }
   }
 
   /** Từ modal edit: tạm đóng → pick map (giữ name/address đang gõ). */
@@ -331,37 +350,82 @@ export function PlacesSection({ tripId }: Props) {
               </div>
             </div>
 
-            <div
-              className={`relative min-h-[240px] bg-background sm:min-h-[320px] lg:min-h-[520px] ${
-                pickingOnMap ? "cursor-crosshair" : ""
-              }`}
-            >
-              {isLoading ? (
-                <Skeleton className="absolute inset-0 rounded-none" />
-              ) : (
-                <TripMap
-                  places={places}
-                  draft={pickingOnMap || formOpen ? coordDraft : null}
-                  focusPlaceId={focusPlaceId}
-                  onMapClick={(coords) => {
-                    if (mapMode === "create") {
-                      setEditing(null);
-                      setTextDraft(null);
-                      openFormFromMap(coords);
-                      return;
-                    }
-                    if (mapMode === "relocate" && editing) {
-                      openFormFromMap(coords);
-                    }
-                  }}
-                  className="absolute inset-0 h-full w-full rounded-none border-0"
-                />
-              )}
-              {pickingOnMap && (
-                <div className="pointer-events-none absolute inset-x-0 top-0 z-10 bg-accent/90 px-3 py-2 text-center text-xs font-medium text-accent-foreground">
-                  {mapMode === "relocate" ? t("editModeMapBanner") : t("createModeMapBanner")}
+            <div className="flex min-h-[240px] flex-col bg-background sm:min-h-[320px] lg:min-h-[520px]">
+              {!pickingOnMap && (
+                <div
+                  className="flex shrink-0 gap-1 overflow-x-auto border-b border-border px-2 py-2"
+                  role="tablist"
+                  aria-label={t("mapDayTabsAria")}
+                >
+                  {Array.from({ length: dayCount }, (_, i) => i + 1).map((day) => {
+                    const active = mapDayTab === day;
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        role="tab"
+                        aria-selected={active}
+                        className={`shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
+                          active
+                            ? "bg-accent text-accent-foreground"
+                            : "bg-surface text-muted hover:bg-accent-soft hover:text-accent"
+                        }`}
+                        onClick={() => setMapDayTab(day)}
+                      >
+                        {t("mapTabDay", { day })}
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={mapDayTab === "all"}
+                    className={`shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
+                      mapDayTab === "all"
+                        ? "bg-accent text-accent-foreground"
+                        : "bg-surface text-muted hover:bg-accent-soft hover:text-accent"
+                    }`}
+                    onClick={() => setMapDayTab("all")}
+                  >
+                    {t("mapTabAllPlaces")}
+                  </button>
                 </div>
               )}
+              <div
+                className={`relative min-h-[200px] flex-1 ${
+                  pickingOnMap ? "cursor-crosshair" : ""
+                }`}
+              >
+                {isLoading ? (
+                  <Skeleton className="absolute inset-0 rounded-none" />
+                ) : (
+                  <TripMap
+                    places={places}
+                    draft={pickingOnMap || formOpen ? coordDraft : null}
+                    focusPlaceId={focusPlaceId}
+                    routeItems={itineraryItems}
+                    filterDay={filterDay}
+                    showRoutes={showRoutes}
+                    onMapClick={(coords) => {
+                      if (mapMode === "create") {
+                        setEditing(null);
+                        setTextDraft(null);
+                        openFormFromMap(coords);
+                        return;
+                      }
+                      if (mapMode === "relocate" && editing) {
+                        openFormFromMap(coords);
+                      }
+                    }}
+                    className="absolute inset-0 h-full w-full rounded-none border-0"
+                  />
+                )}
+                {pickingOnMap && (
+                  <div className="pointer-events-none absolute inset-x-0 top-0 z-10 bg-accent/90 px-3 py-2 text-center text-xs font-medium text-accent-foreground">
+                    {mapMode === "relocate" ? t("editModeMapBanner") : t("createModeMapBanner")}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -370,7 +434,9 @@ export function PlacesSection({ tripId }: Props) {
             ? t("createModeHint")
             : mapMode === "relocate"
               ? t("editModeHint", { name: editing?.name ?? "" })
-              : t("mapHintIdle")}
+              : mapDayTab === "all"
+                ? t("mapHintAllPlaces")
+                : t("mapHintDay", { day: mapDayTab })}
         </p>
       </MobileCollapsible>
 

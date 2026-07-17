@@ -15,6 +15,7 @@ type Props = {
   places: Place[];
   tripDays: number;
   initial?: ItineraryItem;
+  defaultDay?: number;
   isPending: boolean;
   error: unknown;
   formKey: string | number;
@@ -28,6 +29,7 @@ export function ItineraryFormDialog({
   places,
   tripDays,
   initial,
+  defaultDay,
   isPending,
   error,
   formKey,
@@ -96,6 +98,7 @@ export function ItineraryFormDialog({
                 places={places}
                 tripDays={tripDays}
                 initial={initial}
+                defaultDay={defaultDay}
                 isPending={isPending}
                 error={error}
                 onSubmit={onSubmit}

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isTimeInSlot } from "./itinerary-slot-time";
 
 export const tripStatusSchema = z.enum(["DRAFT", "PLANNED", "COMPLETED"]);
 export type TripStatus = z.infer<typeof tripStatusSchema>;
@@ -63,7 +64,7 @@ const timeOfDaySchema = z
   .string()
   .regex(/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/, "time phải dạng HH:mm hoặc HH:mm:ss");
 
-export const createItineraryItemSchema = z.object({
+const itineraryItemBaseSchema = z.object({
   placeId: z.string().uuid(),
   dayNumber: z.number().int().min(1).max(60),
   slot: daySlotSchema,
@@ -76,14 +77,52 @@ export const createItineraryItemSchema = z.object({
   estCost: moneySchema.optional(),
 });
 
+/**
+ * Ràng buộc chéo: startTime/endTime (nếu có) phải nằm trong khung giờ của `slot` đã chọn,
+ * và endTime phải sau startTime. Dùng chung cho cả create/update — .partial() không gọi được
+ * sau .superRefine() nên phải tách base schema ra rồi refine riêng ở mỗi bên.
+ */
+function refineItineraryTimes(
+  data: { slot?: DaySlot; startTime?: string | null; endTime?: string | null },
+  ctx: z.RefinementCtx,
+): void {
+  const { slot, startTime, endTime } = data;
+  if (slot && startTime && !isTimeInSlot(startTime, slot)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["startTime"],
+      message: `startTime không nằm trong khung giờ của buổi ${slot}`,
+    });
+  }
+  if (slot && endTime && !isTimeInSlot(endTime, slot)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["endTime"],
+      message: `endTime không nằm trong khung giờ của buổi ${slot}`,
+    });
+  }
+  if (startTime && endTime && endTime <= startTime) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["endTime"],
+      message: "endTime phải sau startTime",
+    });
+  }
+}
+
+export const createItineraryItemSchema = itineraryItemBaseSchema.superRefine(refineItineraryTimes);
+
 export type CreateItineraryItemInput = z.infer<typeof createItineraryItemSchema>;
 
-export const updateItineraryItemSchema = createItineraryItemSchema.partial().extend({
-  description: z.string().max(2000).nullable().optional(),
-  startTime: timeOfDaySchema.nullable().optional(),
-  endTime: timeOfDaySchema.nullable().optional(),
-  durationMin: z.number().int().min(1).max(24 * 60).nullable().optional(),
-});
+export const updateItineraryItemSchema = itineraryItemBaseSchema
+  .partial()
+  .extend({
+    description: z.string().max(2000).nullable().optional(),
+    startTime: timeOfDaySchema.nullable().optional(),
+    endTime: timeOfDaySchema.nullable().optional(),
+    durationMin: z.number().int().min(1).max(24 * 60).nullable().optional(),
+  })
+  .superRefine(refineItineraryTimes);
 export type UpdateItineraryItemInput = z.infer<typeof updateItineraryItemSchema>;
 
 export const reorderItineraryItemSchema = z.object({

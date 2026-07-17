@@ -127,7 +127,7 @@ export class TripRepository {
   findItineraryMetaByTrip(tripId: string) {
     return this.prisma.itineraryItem.findMany({
       where: { tripId },
-      select: { id: true, dayNumber: true, slot: true, visitOrder: true },
+      select: { id: true, dayNumber: true, slot: true, visitOrder: true, startTime: true },
     });
   }
 

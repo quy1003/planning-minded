@@ -1,8 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { SLOT_TIME_RANGES, timeToSlot } from "@tripmind/shared";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import type { Place } from "@/features/places/types";
 import { ButtonPending } from "@/components/ui/button-pending";
@@ -44,6 +46,8 @@ export function ItineraryForm({
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<ItineraryFormValues>({
     resolver: zodResolver(itineraryFormSchema),
@@ -59,6 +63,25 @@ export function ItineraryForm({
       estCost: initial && initial.estCost !== "0" ? initial.estCost : "",
     },
   });
+
+  const slot = watch("slot");
+  const startTime = watch("startTime");
+  const timeRange = SLOT_TIME_RANGES[slot];
+  // Nhập giờ → tự đổi buổi cho khớp (vd gõ 08:30 → buổi tự nhảy "Sáng"). Chỉ 1 chiều — chọn
+  // buổi không tự xóa giờ, chỉ giới hạn min/max của input để tránh 2 effect đá nhau gây loop.
+  const isFirstRenderRef = useRef(true);
+  useEffect(() => {
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
+    if (!startTime) return;
+    const impliedSlot = timeToSlot(startTime);
+    if (impliedSlot !== slot) {
+      setValue("slot", impliedSlot, { shouldValidate: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startTime]);
 
   const serverError =
     error instanceof ApiError
@@ -112,10 +135,22 @@ export function ItineraryForm({
 
       <div className="grid grid-cols-2 gap-3">
         <Field label={t("fields.startTime")} error={errors.startTime?.message}>
-          <input type="time" className={inputClass} {...register("startTime")} />
+          <input
+            type="time"
+            min={timeRange.min}
+            max={timeRange.max}
+            className={inputClass}
+            {...register("startTime")}
+          />
         </Field>
         <Field label={t("fields.endTime")} error={errors.endTime?.message}>
-          <input type="time" className={inputClass} {...register("endTime")} />
+          <input
+            type="time"
+            min={timeRange.min}
+            max={timeRange.max}
+            className={inputClass}
+            {...register("endTime")}
+          />
         </Field>
       </div>
 

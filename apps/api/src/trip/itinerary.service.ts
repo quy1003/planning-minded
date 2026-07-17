@@ -2,6 +2,7 @@ import { HttpStatus, Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import type {
   CreateItineraryItemInput,
+  DaySlot,
   ReorderItineraryInput,
   UpdateItineraryItemInput,
 } from "@tripmind/shared";
@@ -117,6 +118,8 @@ export class ItineraryService {
       }
     }
 
+    this.assertChronologicalOrder(existingItineraryItems, moves);
+
     try {
       const reorderedItineraryItems = await this.repository.reorderTransaction(tripId, moves);
       return reorderedItineraryItems.map(serializeItineraryItem);
@@ -128,6 +131,59 @@ export class ItineraryService {
         );
       }
       throw error;
+    }
+  }
+
+  /**
+   * Trong cùng (dayNumber, slot): các item CÓ startTime, sắp theo visitOrder cuối cùng, giờ phải
+   * tăng dần — không cho kéo mục giờ trễ hơn lên trước mục giờ sớm hơn. Item không có startTime
+   * thì không bị ràng buộc gì (có thể đứng ở đâu cũng được).
+   */
+  private assertChronologicalOrder(
+    existingItineraryItems: Array<{
+      id: string;
+      dayNumber: number;
+      slot: DaySlot;
+      visitOrder: number;
+      startTime: Date | null;
+    }>,
+    moves: ReorderItineraryInput,
+  ): void {
+    const finalPositionById = new Map(
+      existingItineraryItems.map((item) => [
+        item.id,
+        { dayNumber: item.dayNumber, slot: item.slot, visitOrder: item.visitOrder, startTime: item.startTime },
+      ]),
+    );
+    for (const move of moves) {
+      const current = finalPositionById.get(move.itemId);
+      if (!current) continue;
+      finalPositionById.set(move.itemId, { ...current, dayNumber: move.dayNumber, slot: move.slot, visitOrder: move.visitOrder });
+    }
+
+    const groups = new Map<string, Array<{ visitOrder: number; startTime: Date | null }>>();
+    for (const position of finalPositionById.values()) {
+      const key = `${position.dayNumber}:${position.slot}`;
+      const group = groups.get(key) ?? [];
+      group.push(position);
+      groups.set(key, group);
+    }
+
+    for (const [key, group] of groups) {
+      const timedInOrder = group
+        .filter((position) => position.startTime)
+        .sort((a, b) => a.visitOrder - b.visitOrder);
+      for (let i = 1; i < timedInOrder.length; i++) {
+        const previous = timedInOrder[i - 1]!;
+        const current = timedInOrder[i]!;
+        if (current.startTime!.getTime() < previous.startTime!.getTime()) {
+          const [dayNumber, slot] = key.split(":");
+          throw new BusinessException(
+            `Reorder vi phạm thứ tự thời gian (ngày ${dayNumber}, buổi ${slot})`,
+            HttpStatus.UNPROCESSABLE_ENTITY,
+          );
+        }
+      }
     }
   }
 

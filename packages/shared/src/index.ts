@@ -23,3 +23,5 @@ export {
   type UpdateItineraryItemInput,
   type ReorderItineraryInput,
 } from "./trip/schemas";
+
+export { SLOT_TIME_RANGES, timeToSlot, isTimeInSlot } from "./trip/itinerary-slot-time";

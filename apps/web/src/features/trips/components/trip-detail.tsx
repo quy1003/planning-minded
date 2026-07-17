@@ -61,7 +61,7 @@ export function TripDetail({ tripId }: Props) {
         </aside>
 
         <div className="lg:col-span-full">
-          <PlacesSection tripId={trip.id} />
+          <PlacesSection tripId={trip.id} tripDays={trip.days} />
         </div>
       </div>
 
