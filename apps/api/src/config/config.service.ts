@@ -33,4 +33,8 @@ export class ConfigService {
   get isProduction(): boolean {
     return this.env.NODE_ENV === "production";
   }
+
+  get webOrigin(): string {
+    return this.env.WEB_ORIGIN;
+  }
 }

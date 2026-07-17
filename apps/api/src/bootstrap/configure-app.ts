@@ -13,6 +13,13 @@ export function configureApp(app: INestApplication, configService: ConfigService
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new TransformInterceptor());
 
+  // Cookie session + browser: credentials cần origin cụ thể (không dùng `*`).
+  // Local chủ yếu đi qua Next rewrite (same-origin); CORS vẫn cần nếu gọi Nest trực tiếp.
+  app.enableCors({
+    origin: configService.webOrigin,
+    credentials: true,
+  });
+
   app.use(
     session({
       store: sessionStore,
