@@ -55,8 +55,8 @@
     "saveFailed": "Lưu thất bại",
     "delete": "Xóa",
     "deleting": "Đang xóa…",
-    "deleteConfirm": "Xóa chuyến đi “{title}”? Không hoàn tác được.",
-    "detailNextSlice": "Places + bản đồ (Slice 3) và lịch trình (Slice 4) sẽ thêm ở đây.",
+    "deleteConfirm": "Xóa chuyến đi \"{title}\"? Không hoàn tác được.",
+    "detailNextSlice": "Lịch trình / itinerary + kéo-thả (Slice 4) sẽ thêm ở đây.",
     "fields": {
       "title": "Tiêu đề",
       "destination": "Điểm đến",
@@ -71,6 +71,30 @@
       "DRAFT": "Nháp",
       "PLANNED": "Đã lên kế hoạch",
       "COMPLETED": "Đã hoàn thành"
+    }
+  },
+  "Places": {
+    "title": "Địa điểm",
+    "subtitle": "Ghim trên bản đồ — click map để lấy tọa độ.",
+    "loading": "Đang tải địa điểm…",
+    "loadFailed": "Không tải được địa điểm",
+    "empty": "Chưa có địa điểm. Click bản đồ rồi thêm tên.",
+    "addTitle": "Thêm địa điểm",
+    "editTitle": "Sửa địa điểm",
+    "addSubmit": "Thêm",
+    "saveSubmit": "Lưu",
+    "saving": "Đang lưu…",
+    "saveFailed": "Lưu địa điểm thất bại",
+    "cancelEdit": "Hủy sửa",
+    "delete": "Xóa",
+    "deleteConfirm": "Xóa \"{name}\"?",
+    "deleteConflict": "Địa điểm đang dùng trong lịch trình — xóa itinerary trước.",
+    "mapHint": "Click bản đồ để điền lat/lng (marker vàng = điểm đang chọn).",
+    "fields": {
+      "name": "Tên",
+      "address": "Địa chỉ",
+      "lat": "Vĩ độ (lat)",
+      "lng": "Kinh độ (lng)"
     }
   }
 }

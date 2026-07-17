@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { PlacesSection } from "@/features/places/components/places-section";
 import { ApiError } from "@/lib/api-client";
 import { useTrip, useUpdateTrip } from "../hooks";
 import { toUpdateTripInput } from "../trip-form-schema";
@@ -33,7 +34,7 @@ export function TripDetail({ tripId }: Props) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{trip.title}</h1>
@@ -41,6 +42,8 @@ export function TripDetail({ tripId }: Props) {
         </div>
         <DeleteTripButton tripId={trip.id} title={trip.title} />
       </div>
+
+      <PlacesSection tripId={trip.id} />
 
       <section className="space-y-3">
         <h2 className="text-lg font-medium">{t("editSection")}</h2>
@@ -51,9 +54,7 @@ export function TripDetail({ tripId }: Props) {
           error={update.error}
           onSubmit={(values) => update.mutate(toUpdateTripInput(values))}
         />
-        {update.isSuccess && (
-          <p className="text-sm text-teal-800">{t("saveSuccess")}</p>
-        )}
+        {update.isSuccess && <p className="text-sm text-teal-800">{t("saveSuccess")}</p>}
       </section>
 
       <section className="rounded-lg border border-dashed border-zinc-300 bg-white px-4 py-6 text-sm text-zinc-500">

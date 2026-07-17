@@ -55,8 +55,8 @@
     "saveFailed": "Save failed",
     "delete": "Delete",
     "deleting": "Deleting…",
-    "deleteConfirm": "Delete trip “{title}”? This cannot be undone.",
-    "detailNextSlice": "Places + map (Slice 3) and itinerary (Slice 4) will land here next.",
+    "deleteConfirm": "Delete trip \"{title}\"? This cannot be undone.",
+    "detailNextSlice": "Itinerary + drag-and-drop reorder (Slice 4) will land here next.",
     "fields": {
       "title": "Title",
       "destination": "Destination",
@@ -71,6 +71,30 @@
       "DRAFT": "Draft",
       "PLANNED": "Planned",
       "COMPLETED": "Completed"
+    }
+  },
+  "Places": {
+    "title": "Places",
+    "subtitle": "Pin on the map — click the map to set coordinates.",
+    "loading": "Loading places…",
+    "loadFailed": "Failed to load places",
+    "empty": "No places yet. Click the map, then add a name.",
+    "addTitle": "Add place",
+    "editTitle": "Edit place",
+    "addSubmit": "Add",
+    "saveSubmit": "Save",
+    "saving": "Saving…",
+    "saveFailed": "Failed to save place",
+    "cancelEdit": "Cancel",
+    "delete": "Delete",
+    "deleteConfirm": "Delete \"{name}\"?",
+    "deleteConflict": "Place is used by itinerary items — remove those first.",
+    "mapHint": "Click the map to fill lat/lng (amber marker = draft point).",
+    "fields": {
+      "name": "Name",
+      "address": "Address",
+      "lat": "Latitude",
+      "lng": "Longitude"
     }
   }
 }
