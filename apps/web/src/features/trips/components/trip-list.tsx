@@ -1,32 +1,37 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { QueryError } from "@/components/ui/query-error";
+import { TripListSkeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/navigation";
 import { useTrips } from "../hooks";
 
 export function TripList() {
   const t = useTranslations("Trips");
-  const { data: trips, isLoading, isError, error } = useTrips();
+  const { data: trips, isLoading, isError, error, refetch, isFetching } = useTrips();
 
   if (isLoading) {
-    return <p className="text-sm text-zinc-600">{t("loadingList")}</p>;
+    return <TripListSkeleton />;
   }
 
   if (isError) {
     return (
-      <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-        {error instanceof Error ? error.message : t("loadFailed")}
-      </p>
+      <QueryError
+        message={error instanceof Error ? error.message : t("loadFailed")}
+        onRetry={() => {
+          void refetch();
+        }}
+      />
     );
   }
 
   if (!trips || trips.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-zinc-300 bg-white px-4 py-10 text-center">
+      <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-4 py-12 text-center">
         <p className="text-sm text-zinc-600">{t("empty")}</p>
         <Link
           href="/trips/new"
-          className="mt-4 inline-flex rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900"
+          className="mt-4 inline-flex rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-900"
         >
           {t("createFirst")}
         </Link>
@@ -35,12 +40,16 @@ export function TripList() {
   }
 
   return (
-    <ul className="divide-y divide-zinc-200 rounded-lg border border-zinc-200 bg-white">
+    <ul
+      className={`divide-y divide-zinc-200 rounded-xl border border-zinc-200 bg-white shadow-sm transition-opacity ${
+        isFetching ? "opacity-70" : ""
+      }`}
+    >
       {trips.map((trip) => (
         <li key={trip.id}>
           <Link
             href={`/trips/${trip.id}`}
-            className="flex items-start justify-between gap-4 px-4 py-3 transition hover:bg-zinc-50"
+            className="flex items-start justify-between gap-4 px-4 py-3.5 transition hover:bg-zinc-50 active:bg-zinc-100"
           >
             <div className="min-w-0">
               <p className="truncate font-medium text-zinc-900">{trip.title}</p>

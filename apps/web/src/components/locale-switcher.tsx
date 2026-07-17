@@ -11,10 +11,10 @@ export function LocaleSwitcher() {
   const router = useRouter();
 
   return (
-    <label className="flex items-center gap-2 text-sm text-zinc-600">
+    <label className="flex items-center gap-2 text-sm text-muted">
       <span className="sr-only">{t("label")}</span>
       <select
-        className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm outline-none focus:border-teal-600"
+        className="rounded-lg border border-border bg-surface px-2 py-1.5 text-sm text-foreground outline-none focus:border-accent focus:ring-2 focus:ring-ring"
         value={locale}
         aria-label={t("label")}
         onChange={(event) => {

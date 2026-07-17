@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useForm } from "react-hook-form";
+import { ButtonPending } from "@/components/ui/button-pending";
 import { ApiError } from "@/lib/api-client";
 import { tripFormSchema, type TripFormValues } from "../trip-form-schema";
 import type { Trip } from "../types";
@@ -101,9 +102,12 @@ export function TripForm({ mode, initial, isPending, error, onSubmit }: Props) {
       <button
         type="submit"
         disabled={isPending}
+        aria-busy={isPending}
         className="rounded-md bg-teal-800 px-4 py-2.5 text-sm font-medium text-white hover:bg-teal-900 disabled:opacity-60"
       >
-        {isPending ? t("saving") : mode === "create" ? t("createSubmit") : t("saveSubmit")}
+        <ButtonPending pending={isPending} onDark>
+          {mode === "create" ? t("createSubmit") : t("saveSubmit")}
+        </ButtonPending>
       </button>
     </form>
   );

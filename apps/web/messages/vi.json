@@ -2,6 +2,13 @@
   "Common": {
     "appName": "TripMind",
     "loading": "Đang tải…",
+    "retry": "Thử lại",
+    "cancel": "Hủy",
+    "confirm": "Xác nhận",
+    "ok": "Đóng",
+    "deleting": "Đang xóa…",
+    "somethingWrong": "Đã xảy ra lỗi",
+    "tryAgainHint": "Thử tải lại trang hoặc quay lại sau.",
     "email": "Email",
     "password": "Password",
     "nameOptional": "Tên (tuỳ chọn)"
@@ -10,6 +17,113 @@
     "label": "Ngôn ngữ",
     "vi": "Tiếng Việt",
     "en": "English"
+  },
+  "Theme": {
+    "toggle": "Đổi giao diện sáng/tối",
+    "light": "Chế độ sáng",
+    "dark": "Chế độ tối"
+  },
+  "Landing": {
+    "nav": {
+      "features": "Tính năng",
+      "how": "Cách dùng",
+      "pricing": "Chi phí",
+      "signIn": "Đăng nhập",
+      "getStarted": "Bắt đầu",
+      "menu": "Mở menu"
+    },
+    "hero": {
+      "badge": "Giới thiệu TripMind",
+      "titleBefore": "Chuyến đi tiếp theo,",
+      "titleHighlight": "lên kế hoạch chuẩn.",
+      "subtitle": "Tự tạo trip, ghim địa điểm trên bản đồ, sắp lịch trình theo ngày — kéo thả đổi thứ tự. AI sẽ bổ sung ở giai đoạn sau.",
+      "ctaPrimary": "Bắt đầu lên kế hoạch",
+      "ctaSecondary": "Xem cách dùng",
+      "socialProof": "Phase 1: lập kế hoạch thủ công cho du khách Việt Nam (vi/en)."
+    },
+    "features": {
+      "title": "Đủ thứ bạn cần lúc này",
+      "subtitle": "Khớp roadmap Phase 1 — chưa AI, chưa microservices.",
+      "items": {
+        "trips": {
+          "title": "Quản lý chuyến đi",
+          "body": "Tạo, sửa, xóa trip: điểm đến, ngày, ngân sách, số người, trạng thái."
+        },
+        "map": {
+          "title": "Địa điểm trên bản đồ",
+          "body": "MapLibre + OpenFreeMap — click map lấy lat/lng, marker theo từng place."
+        },
+        "itinerary": {
+          "title": "Lịch trình theo buổi",
+          "body": "Sắp hoạt động theo ngày / sáng-chiều-tối, gắn place và giờ ước tính."
+        },
+        "dnd": {
+          "title": "Kéo thả thứ tự",
+          "body": "Đổi visitOrder trong cùng buổi bằng dnd-kit — lưu atomic qua API."
+        },
+        "i18n": {
+          "title": "Đa ngôn ngữ",
+          "body": "Giao diện Tiếng Việt và English (next-intl), đổi locale mọi lúc."
+        },
+        "aiSoon": {
+          "title": "AI (sắp tới)",
+          "body": "RAG + itinerary tự sinh nằm ở Phase sau — hôm nay bạn lập plan thủ công."
+        }
+      }
+    },
+    "how": {
+      "title": "Cách hoạt động",
+      "subtitle": "Bốn bước để có lịch trình trên web.",
+      "steps": {
+        "0": {
+          "title": "Đăng ký / đăng nhập",
+          "body": "Session cookie qua proxy /api — không JWT ở Phase 1."
+        },
+        "1": {
+          "title": "Tạo chuyến đi",
+          "body": "Đặt tiêu đề, điểm đến, ngày, ngân sách và số ngày."
+        },
+        "2": {
+          "title": "Ghim địa điểm",
+          "body": "Click bản đồ hoặc nhập tọa độ — mỗi place thành marker."
+        },
+        "3": {
+          "title": "Sắp lịch & kéo thả",
+          "body": "Thêm item theo buổi, kéo đổi thứ tự, refresh vẫn đúng."
+        }
+      }
+    },
+    "pricing": {
+      "title": "Chi phí",
+      "subtitle": "Đang học và xây Phase 1 — không thu phí.",
+      "planLabel": "Phase 1",
+      "price": "Miễn phí",
+      "priceHint": "Dùng local / demo — không có gói trả phí thật.",
+      "perk1": "CRUD trip + places + itinerary",
+      "perk2": "Bản đồ & kéo thả reorder",
+      "perk3": "vi / en + dark / light",
+      "cta": "Tạo tài khoản miễn phí"
+    },
+    "cta": {
+      "title": "Sẵn sàng lên kế hoạch?",
+      "subtitle": "Tạo tài khoản và thử trip mẫu Đà Lạt trong vài phút.",
+      "primary": "Bắt đầu miễn phí",
+      "secondary": "Xem chi phí",
+      "trust1": "Không cần thẻ",
+      "trust2": "Demo có sẵn seed data",
+      "trust3": "Huỷ / xóa trip bất kỳ lúc nào"
+    },
+    "footer": {
+      "blurb": "AI trip planner đang học — Phase 1: modular monolith + web thủ công.",
+      "product": "Sản phẩm",
+      "account": "Tài khoản",
+      "learn": "Học tập",
+      "trips": "Danh sách trips",
+      "phase1": "Phase 1 — modular monolith",
+      "stack": "NestJS · Next.js · Prisma · MapLibre",
+      "rights": "Dự án học tập.",
+      "note": "Copy trung thực với roadmap hiện tại."
+    }
   },
   "Auth": {
     "tagline": "Đăng nhập bằng session cookie (Phase 1).",
@@ -52,10 +166,14 @@
     "saveSubmit": "Lưu thay đổi",
     "saving": "Đang lưu…",
     "saveSuccess": "Đã lưu.",
+    "saveSuccessTitle": "Lưu thành công",
+    "saveSuccessBody": "Thông tin chuyến đi đã được cập nhật.",
     "saveFailed": "Lưu thất bại",
     "delete": "Xóa",
     "deleting": "Đang xóa…",
+    "deleteConfirmTitle": "Xóa chuyến đi?",
     "deleteConfirm": "Xóa chuyến đi \"{title}\"? Không hoàn tác được.",
+    "deleteFailed": "Xóa chuyến đi thất bại",
     "fields": {
       "title": "Tiêu đề",
       "destination": "Điểm đến",
@@ -86,8 +204,11 @@
     "saveFailed": "Lưu địa điểm thất bại",
     "cancelEdit": "Hủy sửa",
     "delete": "Xóa",
-    "deleteConfirm": "Xóa \"{name}\"?",
+    "deleting": "Đang xóa…",
+    "deleteConfirmTitle": "Xóa địa điểm?",
+    "deleteConfirm": "Xóa \"{name}\"? Hành động này không hoàn tác được.",
     "deleteConflict": "Địa điểm đang dùng trong lịch trình — xóa itinerary trước.",
+    "mapLoading": "Đang tải bản đồ…",
     "mapHint": "Click bản đồ để điền lat/lng (marker vàng = điểm đang chọn).",
     "fields": {
       "name": "Tên",
@@ -111,7 +232,10 @@
     "saveFailed": "Lưu thất bại",
     "cancelEdit": "Hủy sửa",
     "delete": "Xóa",
-    "deleteConfirm": "Xóa \"{title}\"?",
+    "deleting": "Đang xóa…",
+    "deleteConfirmTitle": "Xóa mục lịch trình?",
+    "deleteConfirm": "Xóa \"{title}\"? Hành động này không hoàn tác được.",
+    "deleteFailed": "Xóa thất bại",
     "needPlaces": "Cần ít nhất một địa điểm trước khi thêm lịch trình.",
     "dragHandle": "Kéo để đổi thứ tự",
     "conflictOrder": "Thứ tự (ngày/buổi/visitOrder) bị trùng — thử lại.",

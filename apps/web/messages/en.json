@@ -2,6 +2,13 @@
   "Common": {
     "appName": "TripMind",
     "loading": "Loading…",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "ok": "OK",
+    "deleting": "Deleting…",
+    "somethingWrong": "Something went wrong",
+    "tryAgainHint": "Try refreshing the page or come back later.",
     "email": "Email",
     "password": "Password",
     "nameOptional": "Name (optional)"
@@ -10,6 +17,113 @@
     "label": "Language",
     "vi": "Tiếng Việt",
     "en": "English"
+  },
+  "Theme": {
+    "toggle": "Toggle light/dark mode",
+    "light": "Light mode",
+    "dark": "Dark mode"
+  },
+  "Landing": {
+    "nav": {
+      "features": "Features",
+      "how": "How It Works",
+      "pricing": "Pricing",
+      "signIn": "Sign In",
+      "getStarted": "Get Started",
+      "menu": "Open menu"
+    },
+    "hero": {
+      "badge": "Introducing TripMind",
+      "titleBefore": "Your Next Adventure,",
+      "titleHighlight": "Perfectly Planned.",
+      "subtitle": "Create trips, pin places on a map, schedule by day — drag to reorder. AI comes in a later phase.",
+      "ctaPrimary": "Start Planning",
+      "ctaSecondary": "See How It Works",
+      "socialProof": "Phase 1: hands-on trip planning for travelers (vi/en)."
+    },
+    "features": {
+      "title": "Everything you need right now",
+      "subtitle": "Aligned with the Phase 1 roadmap — no AI, no microservices yet.",
+      "items": {
+        "trips": {
+          "title": "Trip management",
+          "body": "Create, edit, and delete trips: destination, dates, budget, party size, status."
+        },
+        "map": {
+          "title": "Places on a map",
+          "body": "MapLibre + OpenFreeMap — click to capture lat/lng; markers per place."
+        },
+        "itinerary": {
+          "title": "Day & slot itinerary",
+          "body": "Schedule activities by morning/afternoon/evening with places and times."
+        },
+        "dnd": {
+          "title": "Drag-and-drop order",
+          "body": "Reorder visitOrder within a slot with dnd-kit — persisted via atomic API."
+        },
+        "i18n": {
+          "title": "Multilingual UI",
+          "body": "Vietnamese and English via next-intl — switch locale anytime."
+        },
+        "aiSoon": {
+          "title": "AI (coming later)",
+          "body": "RAG-powered itineraries land in a later phase — today you plan manually."
+        }
+      }
+    },
+    "how": {
+      "title": "How it works",
+      "subtitle": "Four steps to a working itinerary on the web.",
+      "steps": {
+        "0": {
+          "title": "Sign up / sign in",
+          "body": "Session cookie through the /api proxy — no JWT in Phase 1."
+        },
+        "1": {
+          "title": "Create a trip",
+          "body": "Set title, destination, start date, budget, and length."
+        },
+        "2": {
+          "title": "Pin places",
+          "body": "Click the map or enter coordinates — each place becomes a marker."
+        },
+        "3": {
+          "title": "Schedule & reorder",
+          "body": "Add items by slot, drag to reorder, refresh — order sticks."
+        }
+      }
+    },
+    "pricing": {
+      "title": "Pricing",
+      "subtitle": "Learning project in Phase 1 — no billing.",
+      "planLabel": "Phase 1",
+      "price": "Free",
+      "priceHint": "Local / demo use — no real paid plans yet.",
+      "perk1": "Trip + places + itinerary CRUD",
+      "perk2": "Map & drag-and-drop reorder",
+      "perk3": "vi / en + dark / light",
+      "cta": "Create a free account"
+    },
+    "cta": {
+      "title": "Ready to explore?",
+      "subtitle": "Create an account and try the seeded Đà Lạt trip in minutes.",
+      "primary": "Get started free",
+      "secondary": "See pricing",
+      "trust1": "No credit card",
+      "trust2": "Demo seed data included",
+      "trust3": "Delete trips anytime"
+    },
+    "footer": {
+      "blurb": "An AI trip planner learning project — Phase 1: modular monolith + manual web UI.",
+      "product": "Product",
+      "account": "Account",
+      "learn": "Learning",
+      "trips": "Your trips",
+      "phase1": "Phase 1 — modular monolith",
+      "stack": "NestJS · Next.js · Prisma · MapLibre",
+      "rights": "Learning project.",
+      "note": "Copy matches the current roadmap."
+    }
   },
   "Auth": {
     "tagline": "Sign in with a session cookie (Phase 1).",
@@ -52,10 +166,14 @@
     "saveSubmit": "Save changes",
     "saving": "Saving…",
     "saveSuccess": "Saved.",
+    "saveSuccessTitle": "Saved successfully",
+    "saveSuccessBody": "Your trip details have been updated.",
     "saveFailed": "Save failed",
     "delete": "Delete",
     "deleting": "Deleting…",
+    "deleteConfirmTitle": "Delete trip?",
     "deleteConfirm": "Delete trip \"{title}\"? This cannot be undone.",
+    "deleteFailed": "Failed to delete trip",
     "fields": {
       "title": "Title",
       "destination": "Destination",
@@ -86,8 +204,11 @@
     "saveFailed": "Failed to save place",
     "cancelEdit": "Cancel",
     "delete": "Delete",
-    "deleteConfirm": "Delete \"{name}\"?",
+    "deleting": "Deleting…",
+    "deleteConfirmTitle": "Delete place?",
+    "deleteConfirm": "Delete \"{name}\"? This cannot be undone.",
     "deleteConflict": "Place is used by itinerary items — remove those first.",
+    "mapLoading": "Loading map…",
     "mapHint": "Click the map to fill lat/lng (amber marker = draft point).",
     "fields": {
       "name": "Name",
@@ -111,7 +232,10 @@
     "saveFailed": "Save failed",
     "cancelEdit": "Cancel",
     "delete": "Delete",
-    "deleteConfirm": "Delete \"{title}\"?",
+    "deleting": "Deleting…",
+    "deleteConfirmTitle": "Delete itinerary item?",
+    "deleteConfirm": "Delete \"{title}\"? This cannot be undone.",
+    "deleteFailed": "Delete failed",
     "needPlaces": "Add at least one place before creating itinerary items.",
     "dragHandle": "Drag to reorder",
     "conflictOrder": "Order conflict (day/slot/visitOrder) — try again.",

@@ -5,6 +5,7 @@ import { registerSchema } from "@tripmind/shared";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { ButtonPending } from "@/components/ui/button-pending";
 import { Link } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api-client";
 import { useRegister } from "../hooks";
@@ -102,9 +103,12 @@ export function RegisterForm() {
       <button
         type="submit"
         disabled={registerMutation.isPending}
-        className="rounded-md bg-teal-800 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-teal-900 disabled:opacity-60"
+        aria-busy={registerMutation.isPending}
+        className="rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition hover:bg-accent-hover disabled:opacity-60"
       >
-        {registerMutation.isPending ? t("registering") : t("register")}
+        <ButtonPending pending={registerMutation.isPending} onDark>
+          {t("register")}
+        </ButtonPending>
       </button>
 
       <p className="text-center text-sm text-zinc-600">

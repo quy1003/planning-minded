@@ -19,6 +19,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useTranslations } from "next-intl";
 import type { DaySlot } from "@tripmind/shared";
+import { ButtonPending } from "@/components/ui/button-pending";
 import type { ItineraryItem } from "../types";
 
 type Props = {
@@ -26,6 +27,7 @@ type Props = {
   slot: DaySlot;
   items: ItineraryItem[];
   disabled?: boolean;
+  deletingId?: string;
   onReorder: (nextGroup: ItineraryItem[]) => void;
   onEdit: (item: ItineraryItem) => void;
   onDelete: (item: ItineraryItem) => void;
@@ -36,6 +38,7 @@ export function SortableSlotList({
   slot,
   items,
   disabled,
+  deletingId,
   onReorder,
   onEdit,
   onDelete,
@@ -78,6 +81,7 @@ export function SortableSlotList({
               key={item.id}
               item={item}
               disabled={disabled}
+              isDeleting={deletingId === item.id}
               onEdit={onEdit}
               onDelete={onDelete}
             />
@@ -91,11 +95,13 @@ export function SortableSlotList({
 function SortableItem({
   item,
   disabled,
+  isDeleting,
   onEdit,
   onDelete,
 }: {
   item: ItineraryItem;
   disabled?: boolean;
+  isDeleting?: boolean;
   onEdit: (item: ItineraryItem) => void;
   onDelete: (item: ItineraryItem) => void;
 }) {
@@ -114,7 +120,9 @@ function SortableItem({
     <li
       ref={setNodeRef}
       style={style}
-      className={`flex items-start gap-2 bg-white px-3 py-2 ${isDragging ? "z-10 opacity-80 shadow" : ""}`}
+      className={`flex items-start gap-2 bg-white px-3 py-2 transition ${
+        isDragging ? "z-10 opacity-80 shadow-md" : ""
+      } ${isDeleting ? "opacity-50" : ""}`}
     >
       <button
         type="button"
@@ -137,10 +145,12 @@ function SortableItem({
       </button>
       <button
         type="button"
-        className="shrink-0 text-xs text-red-700 hover:underline"
+        disabled={disabled || isDeleting}
+        aria-busy={isDeleting}
+        className="shrink-0 rounded px-1.5 py-0.5 text-xs text-red-700 transition hover:bg-red-50 disabled:opacity-60"
         onClick={() => onDelete(item)}
       >
-        {t("delete")}
+        <ButtonPending pending={Boolean(isDeleting)}>{t("delete")}</ButtonPending>
       </button>
     </li>
   );

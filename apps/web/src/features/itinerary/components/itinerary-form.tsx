@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import type { Place } from "@/features/places/types";
+import { ButtonPending } from "@/components/ui/button-pending";
 import { ApiError } from "@/lib/api-client";
 import {
   itineraryFormSchema,
@@ -140,9 +141,12 @@ export function ItineraryForm({
         <button
           type="submit"
           disabled={isPending}
+          aria-busy={isPending}
           className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900 disabled:opacity-60"
         >
-          {isPending ? t("saving") : mode === "create" ? t("addSubmit") : t("saveSubmit")}
+          <ButtonPending pending={isPending} onDark>
+            {mode === "create" ? t("addSubmit") : t("saveSubmit")}
+          </ButtonPending>
         </button>
         {mode === "edit" && onCancelEdit && (
           <button
