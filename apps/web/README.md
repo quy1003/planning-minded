@@ -17,12 +17,22 @@ pnpm dev
 
 Copy `apps/web/.env.example` → `apps/web/.env.local` nếu cần đổi URL.
 
-## Cấu trúc (Slice 0)
+## Auth (Slice 1)
+
+- `/login`, `/register` — Zod shared + React Hook Form
+- `/trips` — placeholder (cần session); header có logout
+- Cookie `tripmind.sid` qua rewrite `/api/*`
+
+Demo: `demo@tripmind.local` / `password123`
+
+## Cấu trúc
 
 ```
 src/
-  app/           # routes
-  components/    # UI dùng chung
-  lib/           # api-client, env
-  features/      # auth, trips… (slice sau)
+  app/(auth)/    # login, register
+  app/(app)/     # trips (đã login)
+  features/auth/
+  lib/           # api-client, query-keys
+  providers/
+  middleware.ts  # gate cookie nhẹ
 ```

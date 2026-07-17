@@ -49,6 +49,12 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     },
   });
 
+  // 204 No Content (vd logout) — không có body.
+  if (res.status === 204) {
+    if (!res.ok) throw new ApiError(res.status, {});
+    return undefined as T;
+  }
+
   const payload = await parseJson(res);
 
   if (!res.ok) {
