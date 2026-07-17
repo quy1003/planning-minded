@@ -1,33 +1,9 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { AppProviders } from "@/providers/app-providers";
-import "./globals.css";
+import type { ReactNode } from "react";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "TripMind",
-  description: "AI trip planner — Phase 1 modular monolith",
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="vi" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col bg-zinc-50 text-zinc-900">
-        <AppProviders>{children}</AppProviders>
-      </body>
-    </html>
-  );
+/**
+ * Root layout bắt buộc — html/body nằm ở `[locale]/layout`
+ * (next-intl cần `lang` theo locale).
+ */
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return children;
 }

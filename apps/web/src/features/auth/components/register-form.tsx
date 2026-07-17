@@ -2,9 +2,10 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema } from "@tripmind/shared";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Link } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api-client";
 import { useRegister } from "../hooks";
 
@@ -18,6 +19,8 @@ const registerFormSchema = z.object({
 type RegisterFormValues = z.infer<typeof registerFormSchema>;
 
 export function RegisterForm() {
+  const t = useTranslations("Auth");
+  const tCommon = useTranslations("Common");
   const registerMutation = useRegister();
   const {
     register,
@@ -32,7 +35,7 @@ export function RegisterForm() {
     registerMutation.error instanceof ApiError
       ? registerMutation.error.message
       : registerMutation.error
-        ? "Đăng ký thất bại"
+        ? t("registerFailed")
         : null;
 
   return (
@@ -50,7 +53,7 @@ export function RegisterForm() {
     >
       <div className="space-y-1">
         <label htmlFor="name" className="text-sm font-medium text-zinc-800">
-          Tên (tuỳ chọn)
+          {tCommon("nameOptional")}
         </label>
         <input
           id="name"
@@ -64,7 +67,7 @@ export function RegisterForm() {
 
       <div className="space-y-1">
         <label htmlFor="email" className="text-sm font-medium text-zinc-800">
-          Email
+          {tCommon("email")}
         </label>
         <input
           id="email"
@@ -78,7 +81,7 @@ export function RegisterForm() {
 
       <div className="space-y-1">
         <label htmlFor="password" className="text-sm font-medium text-zinc-800">
-          Password
+          {tCommon("password")}
         </label>
         <input
           id="password"
@@ -101,13 +104,13 @@ export function RegisterForm() {
         disabled={registerMutation.isPending}
         className="rounded-md bg-teal-800 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-teal-900 disabled:opacity-60"
       >
-        {registerMutation.isPending ? "Đang tạo tài khoản…" : "Đăng ký"}
+        {registerMutation.isPending ? t("registering") : t("register")}
       </button>
 
       <p className="text-center text-sm text-zinc-600">
-        Đã có tài khoản?{" "}
+        {t("hasAccount")}{" "}
         <Link href="/login" className="font-medium text-teal-800 underline-offset-2 hover:underline">
-          Đăng nhập
+          {t("login")}
         </Link>
       </p>
     </form>

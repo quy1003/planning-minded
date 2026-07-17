@@ -1,11 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect, type ReactNode } from "react";
+import { useRouter } from "@/i18n/navigation";
 import { useMe } from "../hooks";
 
 /** Chặn route app: chờ /auth/me; 401 → /login. */
 export function RequireAuth({ children }: { children: ReactNode }) {
+  const t = useTranslations("Auth");
   const router = useRouter();
   const { data: user, isLoading, isError, error } = useMe();
 
@@ -18,7 +20,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center text-sm text-zinc-600">
-        Đang kiểm tra phiên đăng nhập…
+        {t("checkingSession")}
       </div>
     );
   }
@@ -26,7 +28,9 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   if (isError) {
     return (
       <div className="flex flex-1 items-center justify-center px-6 text-sm text-red-700">
-        Lỗi tải phiên: {error instanceof Error ? error.message : "unknown"}
+        {t("sessionError", {
+          message: error instanceof Error ? error.message : "unknown",
+        })}
       </div>
     );
   }
@@ -34,7 +38,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   if (!user) {
     return (
       <div className="flex flex-1 items-center justify-center text-sm text-zinc-600">
-        Đang chuyển tới đăng nhập…
+        {t("redirectingLogin")}
       </div>
     );
   }

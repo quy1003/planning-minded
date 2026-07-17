@@ -1,0 +1,42 @@
+{
+  "Common": {
+    "appName": "TripMind",
+    "loading": "Loading…",
+    "email": "Email",
+    "password": "Password",
+    "nameOptional": "Name (optional)"
+  },
+  "Locale": {
+    "label": "Language",
+    "vi": "Tiếng Việt",
+    "en": "English"
+  },
+  "Auth": {
+    "tagline": "Sign in with a session cookie (Phase 1).",
+    "loginTitle": "Sign in",
+    "registerTitle": "Sign up",
+    "login": "Sign in",
+    "loggingIn": "Signing in…",
+    "register": "Sign up",
+    "registering": "Creating account…",
+    "logout": "Sign out",
+    "loggingOut": "Signing out…",
+    "noAccount": "No account yet?",
+    "hasAccount": "Already have an account?",
+    "loginFailed": "Sign-in failed",
+    "registerFailed": "Sign-up failed",
+    "demoHint": "Demo: {email} / {password}",
+    "checkingSession": "Checking your session…",
+    "redirectingLogin": "Redirecting to sign in…",
+    "redirectingApp": "Redirecting to the app…",
+    "sessionError": "Failed to load session: {message}"
+  },
+  "AppShell": {
+    "subtitle": "Your trips"
+  },
+  "Trips": {
+    "title": "Trips",
+    "placeholder": "You are signed in. Trip CRUD + map come in the next slice.",
+    "empty": "Trip list UI is not ready yet — GET /trips API is available."
+  }
+}

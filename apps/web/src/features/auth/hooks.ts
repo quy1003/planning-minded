@@ -1,8 +1,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import type { LoginInput, RegisterInput } from "@tripmind/shared";
+import { useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import * as authApi from "./api";

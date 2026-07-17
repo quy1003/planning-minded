@@ -1,0 +1,42 @@
+{
+  "Common": {
+    "appName": "TripMind",
+    "loading": "Đang tải…",
+    "email": "Email",
+    "password": "Password",
+    "nameOptional": "Tên (tuỳ chọn)"
+  },
+  "Locale": {
+    "label": "Ngôn ngữ",
+    "vi": "Tiếng Việt",
+    "en": "English"
+  },
+  "Auth": {
+    "tagline": "Đăng nhập bằng session cookie (Phase 1).",
+    "loginTitle": "Đăng nhập",
+    "registerTitle": "Đăng ký",
+    "login": "Đăng nhập",
+    "loggingIn": "Đang đăng nhập…",
+    "register": "Đăng ký",
+    "registering": "Đang tạo tài khoản…",
+    "logout": "Đăng xuất",
+    "loggingOut": "Đang thoát…",
+    "noAccount": "Chưa có tài khoản?",
+    "hasAccount": "Đã có tài khoản?",
+    "loginFailed": "Đăng nhập thất bại",
+    "registerFailed": "Đăng ký thất bại",
+    "demoHint": "Demo: {email} / {password}",
+    "checkingSession": "Đang kiểm tra phiên đăng nhập…",
+    "redirectingLogin": "Đang chuyển tới đăng nhập…",
+    "redirectingApp": "Đang chuyển vào app…",
+    "sessionError": "Lỗi tải phiên: {message}"
+  },
+  "AppShell": {
+    "subtitle": "Chuyến đi của bạn"
+  },
+  "Trips": {
+    "title": "Chuyến đi",
+    "placeholder": "Bạn đã đăng nhập. CRUD trip + bản đồ sẽ làm ở slice tiếp theo.",
+    "empty": "Chưa có UI list trip — API GET /trips đã sẵn sàng."
+  }
+}

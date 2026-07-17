@@ -17,22 +17,25 @@ pnpm dev
 
 Copy `apps/web/.env.example` → `apps/web/.env.local` nếu cần đổi URL.
 
-## Auth (Slice 1)
+## Auth (Slice 1) + i18n
 
-- `/login`, `/register` — Zod shared + React Hook Form
-- `/trips` — placeholder (cần session); header có logout
+- `/vi/login`, `/en/login` — Zod shared + React Hook Form
+- `/vi/trips` — placeholder (cần session); header có logout + đổi ngôn ngữ
 - Cookie `tripmind.sid` qua rewrite `/api/*`
+- **next-intl**: messages ở `messages/{vi,en}.json`
 
 Demo: `demo@tripmind.local` / `password123`
 
 ## Cấu trúc
 
 ```
+messages/        # vi.json, en.json
 src/
-  app/(auth)/    # login, register
-  app/(app)/     # trips (đã login)
+  app/[locale]/(auth)/
+  app/[locale]/(app)/
+  i18n/          # routing, request, navigation
   features/auth/
-  lib/           # api-client, query-keys
+  lib/
   providers/
-  middleware.ts  # gate cookie nhẹ
+  middleware.ts  # next-intl + gate cookie
 ```

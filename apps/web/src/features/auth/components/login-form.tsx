@@ -2,12 +2,15 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginInput } from "@tripmind/shared";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
+import { Link } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api-client";
 import { useLogin } from "../hooks";
 
 export function LoginForm() {
+  const t = useTranslations("Auth");
+  const tCommon = useTranslations("Common");
   const login = useLogin();
   const {
     register,
@@ -22,7 +25,7 @@ export function LoginForm() {
     login.error instanceof ApiError
       ? login.error.message
       : login.error
-        ? "Đăng nhập thất bại"
+        ? t("loginFailed")
         : null;
 
   return (
@@ -33,7 +36,7 @@ export function LoginForm() {
     >
       <div className="space-y-1">
         <label htmlFor="email" className="text-sm font-medium text-zinc-800">
-          Email
+          {tCommon("email")}
         </label>
         <input
           id="email"
@@ -47,7 +50,7 @@ export function LoginForm() {
 
       <div className="space-y-1">
         <label htmlFor="password" className="text-sm font-medium text-zinc-800">
-          Password
+          {tCommon("password")}
         </label>
         <input
           id="password"
@@ -70,13 +73,13 @@ export function LoginForm() {
         disabled={login.isPending}
         className="rounded-md bg-teal-800 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-teal-900 disabled:opacity-60"
       >
-        {login.isPending ? "Đang đăng nhập…" : "Đăng nhập"}
+        {login.isPending ? t("loggingIn") : t("login")}
       </button>
 
       <p className="text-center text-sm text-zinc-600">
-        Chưa có tài khoản?{" "}
+        {t("noAccount")}{" "}
         <Link href="/register" className="font-medium text-teal-800 underline-offset-2 hover:underline">
-          Đăng ký
+          {t("register")}
         </Link>
       </p>
     </form>

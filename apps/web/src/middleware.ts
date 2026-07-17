@@ -1,25 +1,36 @@
+import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
+import { routing } from "./i18n/routing";
+
+const intlMiddleware = createMiddleware(routing);
 
 /**
- * Gate nhẹ theo cookie `tripmind.sid`.
- * Không redirect login→trips khi có cookie: cookie có thể stale → tránh vòng lặp
- * với RequireAuth (401 → /login). GuestOnly gọi /auth/me để quyết định.
+ * 1) next-intl: `/` → `/vi`, giữ locale trong URL.
+ * 2) Session gate: `/[locale]/trips` không có cookie → `/[locale]/login`.
  */
-export function middleware(request: NextRequest) {
+export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hasSessionCookie = request.cookies.has("tripmind.sid");
 
-  if (pathname === "/") {
-    return NextResponse.redirect(new URL(hasSessionCookie ? "/trips" : "/login", request.url));
+  const segments = pathname.split("/").filter(Boolean);
+  const maybeLocale = segments[0];
+  const locale = routing.locales.includes(maybeLocale as "vi" | "en")
+    ? maybeLocale
+    : routing.defaultLocale;
+  const pathWithoutLocale =
+    routing.locales.includes(maybeLocale as "vi" | "en")
+      ? `/${segments.slice(1).join("/")}`
+      : pathname;
+  const normalizedPath = pathWithoutLocale === "/" ? "/" : pathWithoutLocale.replace(/\/$/, "") || "/";
+
+  if (normalizedPath.startsWith("/trips") && !hasSessionCookie) {
+    return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
   }
 
-  if (pathname.startsWith("/trips") && !hasSessionCookie) {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-
-  return NextResponse.next();
+  return intlMiddleware(request);
 }
 
 export const config = {
-  matcher: ["/", "/trips/:path*"],
+  // Bỏ qua API rewrite, static, _next
+  matcher: ["/", "/(vi|en)/:path*", "/((?!api|_next|_vercel|.*\\..*).*)"],
 };
