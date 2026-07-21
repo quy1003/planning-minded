@@ -10,6 +10,13 @@ const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7; // 7 ngày
 // sessionStore để trống -> express-session tự dùng MemoryStore mặc định (đủ cho test ngắn hạn).
 // main.ts (app chạy thật) sẽ truyền RedisStore thật vào tham số này.
 export function configureApp(app: INestApplication, configService: ConfigService, sessionStore?: session.Store): void {
+  // Production đứng sau reverse proxy (Render...) — proxy nhận HTTPS rồi forward vào app bằng
+  // HTTP nội bộ. Không set dòng này, Express luôn nghĩ request là HTTP → cookie `secure: true`
+  // bên dưới sẽ không bao giờ được gửi xuống trình duyệt → đăng nhập xong bị đăng xuất ngay.
+  if (configService.isProduction) {
+    app.getHttpAdapter().getInstance().set("trust proxy", 1);
+  }
+
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new TransformInterceptor());
 
