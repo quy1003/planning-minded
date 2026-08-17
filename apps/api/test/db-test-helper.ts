@@ -23,6 +23,16 @@ export async function startTestInfrastructure(): Promise<TestInfrastructure> {
   process.env.DATABASE_URL = postgres.getConnectionUri();
   process.env.REDIS_URL = redis.getConnectionUrl();
   process.env.SESSION_SECRET = "test-session-secret-16";
+  // Keypair disposable chỉ dùng trong test — không phải key thật của môi trường local/prod.
+  process.env.JWT_PRIVATE_JWK = JSON.stringify({
+    crv: "Ed25519",
+    d: "RbCp_y-14dBXUwsobexKEGv7uyr5EER0qwo20Vq5LYc",
+    x: "i-hP5gzWiXKIwZj8tYA7Yu4GPwZfpvs6fdOFQkQr_8Q",
+    kty: "OKP",
+    kid: "test-jwt-key-id",
+    alg: "EdDSA",
+    use: "sig",
+  });
 
   execSync("pnpm exec prisma db push --skip-generate --accept-data-loss", {
     cwd: path.resolve(__dirname, ".."),

@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { envSchema, type Env } from "./env.schema";
+import { envSchema, type Env, type JwtPrivateJwk, type JwtPublicJwk } from "./env.schema";
 
 @Injectable()
 export class ConfigService {
@@ -36,5 +36,21 @@ export class ConfigService {
 
   get webOrigin(): string {
     return this.env.WEB_ORIGIN;
+  }
+
+  /** Private JWK (có `d`) — chỉ dùng để ký token, không bao giờ log/return ra HTTP. */
+  get jwtPrivateJwk(): JwtPrivateJwk {
+    return this.env.JWT_PRIVATE_JWK;
+  }
+
+  /** Public JWK (không có `d`) — đưa vào JWKS endpoint. */
+  get jwtPublicJwk(): JwtPublicJwk {
+    const publicJwk: JwtPrivateJwk = { ...this.env.JWT_PRIVATE_JWK };
+    delete (publicJwk as Partial<JwtPrivateJwk>).d;
+    return publicJwk;
+  }
+
+  get jwtKeyId(): string {
+    return this.env.JWT_PRIVATE_JWK.kid;
   }
 }

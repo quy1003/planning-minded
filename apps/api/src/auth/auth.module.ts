@@ -4,12 +4,13 @@ import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { LocalAuthGuard } from "./guards/local-auth.guard";
 import { SessionAuthGuard } from "./guards/session-auth.guard";
+import { JwksController } from "./jwks.controller";
 import { SessionSerializer } from "./serializers/session.serializer";
 import { LocalStrategy } from "./strategies/local.strategy";
 
 @Module({
   imports: [PassportModule.register({ session: true })],
-  controllers: [AuthController],
+  controllers: [AuthController, JwksController],
   providers: [AuthService, LocalStrategy, SessionSerializer, LocalAuthGuard, SessionAuthGuard],
   exports: [AuthService, SessionAuthGuard],
 })

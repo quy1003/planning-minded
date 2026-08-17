@@ -21,6 +21,9 @@ HS256 dùng 1 secret key đối xứng — mọi service verify token đều ph�
 **Q: Vì sao chọn EdDSA thay vì RS256?**
 EdDSA (Ed25519) hiện đại hơn, key ngắn hơn, ký/verify nhanh hơn RS256 với cùng mức an toàn. RS256 vẫn phổ biến hơn nên hỗ trợ tương thích tốt hơn nếu cần tích hợp hệ thống cũ — doc chấp nhận cả 2, ADR sẽ chốt khi thực làm Phase 2.
 
+**Q: Production lưu JWT key dạng PEM hay JWK?**
+Hai việc khác nhau: (1) **Lưu private key** — PEM, JWK JSON, hoặc PKCS#8 trong Secret Manager / KMS / Vault đều gặp; format không quan trọng bằng *không* commit vào git và hạn chế ai đọc được. `jose` đọc cả PEM lẫn JWK. (2) **Publish public key** — gần như luôn **JWKS** (`/.well-known/jwks.json`) vì OAuth2/OIDC kỳ vọng chuẩn đó. TripMind chọn **lưu private dạng JWK** (1 dòng JSON trong `.env`, ngắn hơn PEM); endpoint JWKS trả cùng key nhưng **bỏ field `d`**.
+
 **Q: Vì sao success là `{ data }` còn error là problem+json, không gộp một envelope?**
 Lỗi đã chốt RFC 9457 trong `CLAUDE.md` (chuẩn HTTP, client/tooling quen). Success chỉ cần bọc payload thống nhất qua interceptor. Field `category: business | system` trên problem+json giúp UI phân: 4xx nghiệp vụ (hiện message) vs 5xx hệ thống (message chung + log server).
 
