@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { LoginInput, RegisterInput } from "@tripmind/shared";
 import { useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api-client";
+import { setAccessToken } from "@/lib/access-token";
 import { queryKeys } from "@/lib/query-keys";
 import * as authApi from "./api";
 
@@ -31,7 +32,8 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: (body: LoginInput) => authApi.login(body),
-    onSuccess: (user) => {
+    onSuccess: ({ accessToken, user }) => {
+      setAccessToken(accessToken);
       queryClient.setQueryData(queryKeys.me, user);
       router.replace("/trips");
       router.refresh();
@@ -45,12 +47,9 @@ export function useRegister() {
 
   return useMutation({
     mutationFn: (body: RegisterInput) => authApi.register(body),
-    onSuccess: async (_user, variables) => {
-      // Register chưa tạo session — login ngay để có cookie.
-      const user = await authApi.login({
-        email: variables.email,
-        password: variables.password,
-      });
+    // /auth/register giờ tự issue token luôn (BE task #6) — không cần gọi login() riêng nữa.
+    onSuccess: ({ accessToken, user }) => {
+      setAccessToken(accessToken);
       queryClient.setQueryData(queryKeys.me, user);
       router.replace("/trips");
       router.refresh();
@@ -65,6 +64,7 @@ export function useLogout() {
   return useMutation({
     mutationFn: () => authApi.logout(),
     onSuccess: async () => {
+      setAccessToken(null);
       queryClient.setQueryData(queryKeys.me, null);
       await queryClient.invalidateQueries();
       router.replace("/login");

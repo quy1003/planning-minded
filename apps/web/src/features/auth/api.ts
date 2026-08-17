@@ -1,13 +1,13 @@
 import type { LoginInput, RegisterInput } from "@tripmind/shared";
 import { api } from "@/lib/api-client";
-import type { AuthUser } from "./types";
+import type { AuthTokenResponse, AuthUser } from "./types";
 
 export function login(body: LoginInput) {
-  return api.post<AuthUser>("/auth/login", body);
+  return api.post<AuthTokenResponse>("/auth/login", body);
 }
 
 export function register(body: RegisterInput) {
-  return api.post<AuthUser>("/auth/register", body);
+  return api.post<AuthTokenResponse>("/auth/register", body);
 }
 
 export function logout() {

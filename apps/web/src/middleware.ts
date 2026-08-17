@@ -6,11 +6,15 @@ const intlMiddleware = createMiddleware(routing);
 
 /**
  * 1) next-intl: `/` → `/vi`, giữ locale trong URL.
- * 2) Session gate: `/[locale]/trips` không có cookie → `/[locale]/login`.
+ * 2) Gate nhanh (thô — chỉ check cookie tồn tại, không verify): `/[locale]/trips`
+ *    không có cookie refresh token → `/[locale]/login`. Lớp chính xác thật sự là
+ *    `RequireAuth` (gọi /auth/me) — middleware chỉ tránh flash nội dung trước khi
+ *    RequireAuth kịp redirect. Tên cookie phải khớp
+ *    apps/api/src/auth/refresh-token-cookie.ts (REFRESH_TOKEN_COOKIE_NAME).
  */
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const hasSessionCookie = request.cookies.has("tripmind.sid");
+  const hasRefreshTokenCookie = request.cookies.has("tripmind.rt");
 
   const segments = pathname.split("/").filter(Boolean);
   const maybeLocale = segments[0];
@@ -23,7 +27,7 @@ export default function middleware(request: NextRequest) {
       : pathname;
   const normalizedPath = pathWithoutLocale === "/" ? "/" : pathWithoutLocale.replace(/\/$/, "") || "/";
 
-  if (normalizedPath.startsWith("/trips") && !hasSessionCookie) {
+  if (normalizedPath.startsWith("/trips") && !hasRefreshTokenCookie) {
     return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
   }
 

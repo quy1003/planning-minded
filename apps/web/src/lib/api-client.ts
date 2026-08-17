@@ -1,7 +1,9 @@
 /**
  * Fetch wrapper gọi Nest qua same-origin `/api/*` (rewrite).
  * Unwrap `{ data }` success; map problem+json → ApiError.
+ * Tự gắn `Authorization: Bearer` (access token); gặp 401 tự refresh 1 lần rồi retry.
  */
+import { getAccessToken, setAccessToken } from "./access-token";
 
 export type ApiErrorBody = {
   detail?: string;
@@ -37,17 +39,54 @@ async function parseJson(res: Response): Promise<unknown> {
   }
 }
 
-export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+// Nhiều request 401 cùng lúc (vd load trang gọi song song vài API) chỉ nên gọi
+// /auth/refresh 1 lần — request sau tự "ăn theo" promise đang chạy thay vì tự gọi lại.
+let refreshPromise: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      try {
+        const res = await fetch("/api/auth/refresh", { method: "POST", credentials: "include" });
+        if (!res.ok) return null;
+        const payload = (await parseJson(res)) as SuccessEnvelope<{ accessToken: string }> | null;
+        const newToken = payload?.data.accessToken ?? null;
+        setAccessToken(newToken);
+        return newToken;
+      } catch {
+        return null;
+      } finally {
+        refreshPromise = null;
+      }
+    })();
+  }
+  return refreshPromise;
+}
+
+export async function apiFetch<T>(path: string, init?: RequestInit, isRetry = false): Promise<T> {
   const url = path.startsWith("/") ? `/api${path}` : `/api/${path}`;
+  const token = getAccessToken();
   const res = await fetch(url, {
     ...init,
     credentials: "include",
     headers: {
       Accept: "application/json",
       ...(init?.body ? { "Content-Type": "application/json" } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...init?.headers,
     },
   });
+
+  // 401 lần đầu (chưa retry) — thử refresh access token 1 lần rồi gọi lại đúng
+  // request gốc. Đây cũng là cơ chế "silent refresh lúc F5": ngay request /auth/me
+  // đầu tiên (chưa có token trong bộ nhớ) sẽ tự đi qua nhánh này.
+  if (res.status === 401 && !isRetry) {
+    const refreshedToken = await refreshAccessToken();
+    if (refreshedToken) {
+      return apiFetch<T>(path, init, true);
+    }
+    // Refresh cũng thất bại (chưa từng login / hết hạn thật) — rơi xuống xử lý lỗi bình thường.
+  }
 
   // 204 No Content (vd logout) — không có body.
   if (res.status === 204) {
