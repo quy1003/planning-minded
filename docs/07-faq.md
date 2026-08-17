@@ -24,6 +24,9 @@ EdDSA (Ed25519) hiện đại hơn, key ngắn hơn, ký/verify nhanh hơn RS256
 **Q: Production lưu JWT key dạng PEM hay JWK?**
 Hai việc khác nhau: (1) **Lưu private key** — PEM, JWK JSON, hoặc PKCS#8 trong Secret Manager / KMS / Vault đều gặp; format không quan trọng bằng *không* commit vào git và hạn chế ai đọc được. `jose` đọc cả PEM lẫn JWK. (2) **Publish public key** — gần như luôn **JWKS** (`/.well-known/jwks.json`) vì OAuth2/OIDC kỳ vọng chuẩn đó. TripMind chọn **lưu private dạng JWK** (1 dòng JSON trong `.env`, ngắn hơn PEM); endpoint JWKS trả cùng key nhưng **bỏ field `d`**.
 
+**Q: Vì sao refresh token lưu trong Postgres, không phải Redis-only cho đơn giản?**
+Cân nhắc cả 2: Redis-only (TTL tự dọn, không cần Prisma model) vs DB+Redis-revocation-list (đúng `02-architecture.md` §3.2). Ban đầu chọn Redis-only cho đơn giản, nhưng lộ 2 vấn đề khi thiết kế tiếp task #5 (revoke mọi thiết bị): (1) Redis lưu theo key `refresh:<hash>` không tra ngược được "user X có những token nào" — phải tự maintain thêm 1 Redis Set phụ, dễ lệch dữ liệu; (2) Redis không đảm bảo bền — restart/eviction có thể xóa mất refresh token còn hạn, user bị đăng xuất oan. Postgres giải quyết cả 2: tự nhiên query được `WHERE userId = X`, và bền qua restart. Đổi lại mất TTL tự dọn (phải tự lọc `expiresAt`, dọn định kỳ là việc để sau). Chi tiết: `docs/adr/006-refresh-token-storage.md`.
+
 **Q: Vì sao success là `{ data }` còn error là problem+json, không gộp một envelope?**
 Lỗi đã chốt RFC 9457 trong `CLAUDE.md` (chuẩn HTTP, client/tooling quen). Success chỉ cần bọc payload thống nhất qua interceptor. Field `category: business | system` trên problem+json giúp UI phân: 4xx nghiệp vụ (hiện message) vs 5xx hệ thống (message chung + log server).
 

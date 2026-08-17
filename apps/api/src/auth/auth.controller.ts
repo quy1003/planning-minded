@@ -8,7 +8,7 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
-import { registerSchema, type RegisterInput } from "@tripmind/shared";
+import { refreshTokenSchema, registerSchema, type RefreshTokenInput, type RegisterInput } from "@tripmind/shared";
 import type { Request } from "express";
 import { CurrentUser, type AuthUser } from "../common/decorators/current-user.decorator";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
@@ -16,10 +16,21 @@ import { AuthService } from "./auth.service";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { LocalAuthGuard } from "./guards/local-auth.guard";
 import { SessionAuthGuard } from "./guards/session-auth.guard";
+import { JwtService } from "./jwt.service";
+import { RefreshTokenService } from "./refresh-token.service";
+
+export type RefreshResponse = {
+  accessToken: string;
+  refreshToken: string;
+};
 
 @Controller("auth")
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly jwtService: JwtService,
+    private readonly refreshTokenService: RefreshTokenService,
+  ) {}
 
   @Post("register")
   @HttpCode(HttpStatus.CREATED)
@@ -57,6 +68,21 @@ export class AuthController {
   @UseGuards(SessionAuthGuard)
   me(@CurrentUser() user: AuthUser): AuthUser {
     return user;
+  }
+
+  /**
+   * Đưa refresh token cũ, nhận access token mới + refresh token mới (rotation —
+   * token cũ vô hiệu ngay). Chưa route thật nào issue refresh token (task #6) —
+   * task #4 test bằng cách tự gọi RefreshTokenService.issue() trong test/script.
+   */
+  @Post("refresh")
+  @HttpCode(HttpStatus.OK)
+  async refresh(
+    @Body(new ZodValidationPipe(refreshTokenSchema)) body: RefreshTokenInput,
+  ): Promise<RefreshResponse> {
+    const { userId, newToken } = await this.refreshTokenService.rotate(body.refreshToken);
+    const accessToken = await this.jwtService.signAccessToken(userId);
+    return { accessToken, refreshToken: newToken };
   }
 
   /**

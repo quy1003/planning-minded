@@ -7,6 +7,7 @@ import { LocalAuthGuard } from "./guards/local-auth.guard";
 import { SessionAuthGuard } from "./guards/session-auth.guard";
 import { JwksController } from "./jwks.controller";
 import { JwtService } from "./jwt.service";
+import { RefreshTokenService } from "./refresh-token.service";
 import { SessionSerializer } from "./serializers/session.serializer";
 import { LocalStrategy } from "./strategies/local.strategy";
 
@@ -16,12 +17,13 @@ import { LocalStrategy } from "./strategies/local.strategy";
   providers: [
     AuthService,
     JwtService,
+    RefreshTokenService,
     LocalStrategy,
     SessionSerializer,
     LocalAuthGuard,
     SessionAuthGuard,
     JwtAuthGuard,
   ],
-  exports: [AuthService, JwtService, SessionAuthGuard],
+  exports: [AuthService, JwtService, RefreshTokenService, SessionAuthGuard],
 })
 export class AuthModule {}

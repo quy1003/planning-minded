@@ -62,7 +62,7 @@ BFF cho web. Route requests, verify JWT (public key từ JWKS của auth-service
 ### 3.2 auth-service
 - Đăng ký/đăng nhập, profile.
 - **Asymmetric crypto:** ký JWT bằng private key (RS256 hoặc EdDSA/Ed25519 — hiện đại hơn); expose `GET /.well-known/jwks.json` chứa public key. Các service khác verify token mà **không cần gọi** auth-service → loose coupling, đây chính là lợi ích của bất đối xứng so với HS256.
-- Refresh token: opaque, lưu hash trong DB, rotation mỗi lần dùng, revocation list trong Redis.
+- Refresh token: opaque, lưu hash trong DB (bảng `RefreshToken`, tự nhiên hỗ trợ tra theo `userId` — cần cho "đăng xuất mọi thiết bị"), rotation mỗi lần dùng, revocation list trong Redis. Xem `docs/adr/006-refresh-token-storage.md`.
 - Key rotation: hỗ trợ nhiều key qua `kid` trong JWKS.
 - Password: argon2id.
 
