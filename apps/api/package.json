@@ -31,6 +31,7 @@
     "connect-redis": "^9.0.0",
     "dotenv": "^17.4.2",
     "express-session": "^1.19.0",
+    "jose": "^4.15.9",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "redis": "^6.1.0",
