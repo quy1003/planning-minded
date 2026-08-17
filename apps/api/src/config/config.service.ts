@@ -53,4 +53,13 @@ export class ConfigService {
   get jwtKeyId(): string {
     return this.env.JWT_PRIVATE_JWK.kid;
   }
+
+  /**
+   * URL JWKS của chính app này — gọi qua loopback (`localhost:PORT`), không phải domain public.
+   * Guard verify JWT chạy trong CÙNG process đang serve endpoint này, nên loopback luôn đúng dù
+   * production đứng sau reverse proxy nào (proxy không liên quan tới traffic nội bộ này).
+   */
+  get jwksUrl(): string {
+    return `http://localhost:${this.env.PORT}/.well-known/jwks.json`;
+  }
 }

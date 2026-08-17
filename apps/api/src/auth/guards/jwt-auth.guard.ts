@@ -1,0 +1,49 @@
+import { Injectable, UnauthorizedException, type CanActivate, type ExecutionContext } from "@nestjs/common";
+import type { Request } from "express";
+import { createRemoteJWKSet, jwtVerify } from "jose";
+import { ConfigService } from "../../config/config.service";
+
+function extractBearerToken(authorizationHeader: string | undefined): string | null {
+  if (!authorizationHeader?.startsWith("Bearer ")) {
+    return null;
+  }
+  const token = authorizationHeader.slice("Bearer ".length).trim();
+  return token.length > 0 ? token : null;
+}
+
+/**
+ * Verify JWT "offline": không hỏi lại auth-service mỗi request — chỉ cần public key
+ * (lấy qua JWKS, `createRemoteJWKSet` tự cache) để tự verify chữ ký tại chỗ.
+ * Chạy song song với `SessionAuthGuard` — chưa route thật nào dùng (task #6 mới migrate).
+ */
+@Injectable()
+export class JwtAuthGuard implements CanActivate {
+  private readonly jwks: ReturnType<typeof createRemoteJWKSet>;
+
+  constructor(configService: ConfigService) {
+    this.jwks = createRemoteJWKSet(new URL(configService.jwksUrl));
+  }
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest<Request>();
+    const token = extractBearerToken(request.headers.authorization);
+    if (!token) {
+      throw new UnauthorizedException({ detail: "Missing bearer token" });
+    }
+
+    let userId: string;
+    try {
+      const { payload } = await jwtVerify(token, this.jwks, { algorithms: ["EdDSA"] });
+      if (typeof payload.sub !== "string") {
+        throw new Error("Access token thiếu claim 'sub'");
+      }
+      userId = payload.sub;
+    } catch {
+      // Không lộ chi tiết lỗi crypto (hết hạn / sai chữ ký / sai format) ra ngoài.
+      throw new UnauthorizedException({ detail: "Invalid or expired token" });
+    }
+
+    request.jwtUser = { id: userId };
+    return true;
+  }
+}

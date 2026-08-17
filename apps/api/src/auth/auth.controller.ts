@@ -13,6 +13,7 @@ import type { Request } from "express";
 import { CurrentUser, type AuthUser } from "../common/decorators/current-user.decorator";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
 import { AuthService } from "./auth.service";
+import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { LocalAuthGuard } from "./guards/local-auth.guard";
 import { SessionAuthGuard } from "./guards/session-auth.guard";
 
@@ -56,5 +57,19 @@ export class AuthController {
   @UseGuards(SessionAuthGuard)
   me(@CurrentUser() user: AuthUser): AuthUser {
     return user;
+  }
+
+  /**
+   * Route test tạm cho JwtAuthGuard (Phase 2 task #3) — chứng minh verify JWT offline
+   * hoạt động. KHÔNG phải API thật, chưa route CRUD nào dùng JwtAuthGuard.
+   * Dọn ở task #6 khi migrate login/me thật sang JWT.
+   */
+  @Get("whoami-jwt")
+  @UseGuards(JwtAuthGuard)
+  whoamiJwt(@Req() req: Request): { id: string } {
+    if (!req.jwtUser) {
+      throw new Error("JwtAuthGuard đã pass nhưng thiếu req.jwtUser — kiểm tra lại guard");
+    }
+    return req.jwtUser;
   }
 }
