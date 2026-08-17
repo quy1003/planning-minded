@@ -13,7 +13,9 @@ import {
   type TestInfrastructure,
 } from "./db-test-helper";
 
-describe("JwtAuthGuard (integration)", () => {
+// GET /auth/me là route thật đầu tiên dùng JwtAuthGuard (task #6) — trước đó test
+// này nhắm route tạm /auth/whoami-jwt (task #3), đã bị xóa sau khi migrate xong.
+describe("JwtAuthGuard (integration, qua GET /auth/me)", () => {
   let app: INestApplication;
   let infra: TestInfrastructure;
   let server: App;
@@ -47,19 +49,25 @@ describe("JwtAuthGuard (integration)", () => {
     }
   });
 
-  it("returns 200 + user id with a valid bearer token", async () => {
-    const token = await jwtService.signAccessToken("user-123");
-
+  async function registerTestUser(email: string): Promise<string> {
     const res = await request(server)
-      .get("/auth/whoami-jwt")
-      .set("Authorization", `Bearer ${token}`)
-      .expect(200);
+      .post("/auth/register")
+      .send({ email, password: "password123" })
+      .expect(201);
+    return res.body.data.user.id as string;
+  }
 
-    expect(res.body).toEqual({ data: { id: "user-123" } });
+  it("returns 200 + user profile with a valid bearer token", async () => {
+    const userId = await registerTestUser("jwt-guard-1@tripmind.test");
+    const token = await jwtService.signAccessToken(userId);
+
+    const res = await request(server).get("/auth/me").set("Authorization", `Bearer ${token}`).expect(200);
+
+    expect(res.body.data).toMatchObject({ id: userId, email: "jwt-guard-1@tripmind.test" });
   });
 
   it("returns 401 without Authorization header", async () => {
-    const res = await request(server).get("/auth/whoami-jwt").expect(401);
+    const res = await request(server).get("/auth/me").expect(401);
 
     expect(res.headers["content-type"]).toMatch(/application\/problem\+json/);
     expect(res.body.category).toBe("business");
@@ -74,10 +82,7 @@ describe("JwtAuthGuard (integration)", () => {
       .setExpirationTime(Math.floor(Date.now() / 1000) - 60)
       .sign(privateKey);
 
-    await request(server)
-      .get("/auth/whoami-jwt")
-      .set("Authorization", `Bearer ${expiredToken}`)
-      .expect(401);
+    await request(server).get("/auth/me").set("Authorization", `Bearer ${expiredToken}`).expect(401);
   });
 
   it("returns 401 with a tampered token", async () => {
@@ -92,9 +97,6 @@ describe("JwtAuthGuard (integration)", () => {
     const tamperedChar = signature[0] === "A" ? "B" : "A";
     const tamperedToken = `${header}.${payload}.${tamperedChar}${signature.slice(1)}`;
 
-    await request(server)
-      .get("/auth/whoami-jwt")
-      .set("Authorization", `Bearer ${tamperedToken}`)
-      .expect(401);
+    await request(server).get("/auth/me").set("Authorization", `Bearer ${tamperedToken}`).expect(401);
   });
 });

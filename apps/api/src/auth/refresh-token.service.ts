@@ -2,7 +2,8 @@ import { createHash, randomBytes } from "node:crypto";
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 
-const REFRESH_TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 ngày
+/** Export để AuthController dùng chung 1 giá trị cho `maxAge` cookie refresh token. */
+export const REFRESH_TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 ngày
 
 export type RotateResult = {
   userId: string;

@@ -22,7 +22,6 @@ export async function startTestInfrastructure(): Promise<TestInfrastructure> {
   process.env.PORT = "3001";
   process.env.DATABASE_URL = postgres.getConnectionUri();
   process.env.REDIS_URL = redis.getConnectionUrl();
-  process.env.SESSION_SECRET = "test-session-secret-16";
   // Keypair disposable chỉ dùng trong test — không phải key thật của môi trường local/prod.
   process.env.JWT_PRIVATE_JWK = JSON.stringify({
     crv: "Ed25519",

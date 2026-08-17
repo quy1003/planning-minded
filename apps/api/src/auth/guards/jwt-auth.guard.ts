@@ -14,7 +14,7 @@ function extractBearerToken(authorizationHeader: string | undefined): string | n
 /**
  * Verify JWT "offline": không hỏi lại auth-service mỗi request — chỉ cần public key
  * (lấy qua JWKS, `createRemoteJWKSet` tự cache) để tự verify chữ ký tại chỗ.
- * Chạy song song với `SessionAuthGuard` — chưa route thật nào dùng (task #6 mới migrate).
+ * Bảo vệ mọi route thật cần đăng nhập từ task #6 (`/auth/me`, `/auth/logout-all`, `trips/*`).
  */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {

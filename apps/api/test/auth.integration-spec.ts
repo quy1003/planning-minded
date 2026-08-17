@@ -24,9 +24,11 @@ describe("Auth (integration)", () => {
     }).compile();
 
     app = moduleRef.createNestApplication();
-    // Không truyền RedisStore → MemoryStore (đủ cho test; Redis vẫn chạy cho RedisService boot).
-    configureApp(app, app.get(ConfigService));
-    await app.init();
+    const configService = app.get(ConfigService);
+    configureApp(app, configService);
+    // /auth/me dùng JwtAuthGuard — tự fetch JWKS của chính app này qua HTTP thật,
+    // phải thật sự listen ở đúng port configService.port thì mới fetch được.
+    await app.listen(configService.port);
     server = app.getHttpServer() as App;
   }, 120_000);
 
@@ -39,20 +41,24 @@ describe("Auth (integration)", () => {
     }
   });
 
-  it("registers a new user without leaking passwordHash", async () => {
+  it("registers a new user, auto-issues tokens, without leaking passwordHash", async () => {
     const res = await request(server)
       .post("/auth/register")
       .send({ email: "new@tripmind.test", password: "password123", name: "New" })
       .expect(201);
 
     expect(res.body).toEqual({
-      data: expect.objectContaining({
-        email: "new@tripmind.test",
-        name: "New",
-        id: expect.any(String),
-      }),
+      data: {
+        accessToken: expect.any(String),
+        user: expect.objectContaining({
+          email: "new@tripmind.test",
+          name: "New",
+          id: expect.any(String),
+        }),
+      },
     });
-    expect(res.body.data).not.toHaveProperty("passwordHash");
+    expect(res.body.data.user).not.toHaveProperty("passwordHash");
+    expect(res.headers["set-cookie"]?.[0]).toMatch(/^tripmind\.rt=.+HttpOnly/);
   });
 
   it("rejects duplicate email with business problem+json 409", async () => {
@@ -87,27 +93,50 @@ describe("Auth (integration)", () => {
     );
   });
 
-  it("login → me → logout → me blocked (cookie session)", async () => {
+  it("login → me (Bearer) → refresh (cookie) → logout → refresh with old cookie fails", async () => {
     const email = "flow@tripmind.test";
     const password = "password123";
-
     await request(server).post("/auth/register").send({ email, password }).expect(201);
 
+    // agent giữ cookie jar tự động — refresh token cookie (httpOnly) sẽ tự đi kèm
+    // các request tiếp theo qua CÙNG agent, giống hệt browser thật.
     const agent = request.agent(server);
-
     const login = await agent.post("/auth/login").send({ email, password }).expect(200);
-    expect(login.body.data).toMatchObject({ email });
-    expect(login.headers["set-cookie"]).toBeDefined();
+    const accessToken = login.body.data.accessToken as string;
+    expect(login.body.data.user).toMatchObject({ email });
+    expect(login.headers["set-cookie"]?.[0]).toMatch(/^tripmind\.rt=/);
 
-    const me = await agent.get("/auth/me").expect(200);
+    const me = await request(server)
+      .get("/auth/me")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
     expect(me.body.data).toMatchObject({ email });
     expect(me.body.data).not.toHaveProperty("passwordHash");
 
+    const refresh = await agent.post("/auth/refresh").expect(200);
+    expect(refresh.body.data).toEqual({ accessToken: expect.any(String) });
+    expect(refresh.body.data).not.toHaveProperty("refreshToken"); // không lộ raw token qua body
+
     await agent.post("/auth/logout").expect(204);
 
-    const meAfter = await agent.get("/auth/me").expect(401);
-    expect(meAfter.headers["content-type"]).toMatch(/application\/problem\+json/);
-    expect(meAfter.body.category).toBe("business");
+    // Cookie cũ (đã bị rotate ở bước refresh rồi revoke ở logout) không dùng lại được.
+    const refreshAfterLogout = await agent.post("/auth/refresh").expect(401);
+    expect(refreshAfterLogout.body.category).toBe("business");
+  });
+
+  it("access token vẫn hợp lệ sau logout tới khi tự hết hạn (15 phút) — logout chỉ thu hồi refresh token", async () => {
+    const email = "logout-access-token@tripmind.test";
+    const password = "password123";
+    await request(server).post("/auth/register").send({ email, password }).expect(201);
+
+    const agent = request.agent(server);
+    const login = await agent.post("/auth/login").send({ email, password }).expect(200);
+    const accessToken = login.body.data.accessToken as string;
+
+    await agent.post("/auth/logout").expect(204);
+
+    // Đúng như ADR 006 nêu — chưa có cơ chế "kill access token còn hạn ngay lập tức".
+    await request(server).get("/auth/me").set("Authorization", `Bearer ${accessToken}`).expect(200);
   });
 
   it("rejects bad login credentials with business 401", async () => {

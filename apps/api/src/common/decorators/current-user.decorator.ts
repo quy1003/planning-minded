@@ -1,7 +1,7 @@
 import { createParamDecorator, type ExecutionContext } from "@nestjs/common";
 import type { Request } from "express";
 
-/** User gắn vào session (không gồm passwordHash). */
+/** Shape user trả về sau khi verify password / tra DB (không gồm passwordHash). */
 export type AuthUser = {
   id: string;
   email: string;
@@ -10,7 +10,11 @@ export type AuthUser = {
 
 type RequestWithUser = Request & { user?: AuthUser };
 
-/** Lấy `req.user` — dùng: `me(@CurrentUser() user: AuthUser)`. */
+/**
+ * Lấy `req.user` — gán bởi Passport khi `LocalStrategy.validate()` chạy qua
+ * `LocalAuthGuard` (chỉ dùng ở `/auth/login`). Route đã login rồi (JWT) dùng
+ * `@CurrentUserId()` (đọc `req.jwtUser`, gán bởi `JwtAuthGuard`) thay vì decorator này.
+ */
 export const CurrentUser = createParamDecorator((_data: unknown, ctx: ExecutionContext): AuthUser => {
   const request = ctx.switchToHttp().getRequest<RequestWithUser>();
   if (!request.user) {

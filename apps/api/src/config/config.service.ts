@@ -26,10 +26,6 @@ export class ConfigService {
     return this.env.REDIS_URL;
   }
 
-  get sessionSecret(): string {
-    return this.env.SESSION_SECRET;
-  }
-
   get isProduction(): boolean {
     return this.env.NODE_ENV === "production";
   }

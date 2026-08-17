@@ -4,6 +4,7 @@ import request from "supertest";
 import type { App } from "supertest/types";
 import { AppModule } from "../src/app.module";
 import { JwtService } from "../src/auth/jwt.service";
+import { REFRESH_TOKEN_COOKIE_NAME } from "../src/auth/refresh-token-cookie";
 import { RefreshTokenService } from "../src/auth/refresh-token.service";
 import { configureApp } from "../src/bootstrap/configure-app";
 import { ConfigService } from "../src/config/config.service";
@@ -13,7 +14,7 @@ import {
   type TestInfrastructure,
 } from "./db-test-helper";
 
-describe("POST /auth/revoke, /auth/revoke-all (integration)", () => {
+describe("POST /auth/logout, /auth/logout-all (integration)", () => {
   let app: INestApplication;
   let infra: TestInfrastructure;
   let server: App;
@@ -33,7 +34,7 @@ describe("POST /auth/revoke, /auth/revoke-all (integration)", () => {
     jwtService = app.get(JwtService);
     configureApp(app, configService);
 
-    // /auth/revoke-all dùng JwtAuthGuard, tự fetch JWKS của chính app này qua HTTP
+    // /auth/logout-all dùng JwtAuthGuard, tự fetch JWKS của chính app này qua HTTP
     // thật — phải listen ở đúng port configService.port (giống task #3).
     await app.listen(configService.port);
     server = app.getHttpServer() as App;
@@ -53,31 +54,54 @@ describe("POST /auth/revoke, /auth/revoke-all (integration)", () => {
       .post("/auth/register")
       .send({ email, password: "password123" })
       .expect(201);
-    return res.body.data.id as string;
+    return res.body.data.user.id as string;
   }
 
-  describe("POST /auth/revoke", () => {
-    it("revokes a refresh token — refreshing with it afterwards fails (401)", async () => {
-      const userId = await registerTestUser("revoke-1@tripmind.test");
+  // Task #6: refresh token đọc từ cookie httpOnly, KHÔNG còn nhận qua body.
+  function refreshWithCookie(token: string) {
+    return request(server).post("/auth/refresh").set("Cookie", `${REFRESH_TOKEN_COOKIE_NAME}=${token}`);
+  }
+
+  describe("POST /auth/logout", () => {
+    it("revokes the refresh token in the cookie — refreshing with it afterwards fails (401)", async () => {
+      const userId = await registerTestUser("logout-1@tripmind.test");
       const token = await refreshTokenService.issue(userId);
 
-      await request(server).post("/auth/revoke").send({ refreshToken: token }).expect(204);
+      await request(server)
+        .post("/auth/logout")
+        .set("Cookie", `${REFRESH_TOKEN_COOKIE_NAME}=${token}`)
+        .expect(204);
 
-      await request(server).post("/auth/refresh").send({ refreshToken: token }).expect(401);
+      await refreshWithCookie(token).expect(401);
     });
 
-    it("is idempotent — revoking a token that never existed still returns 204", async () => {
+    it("is idempotent — logging out with no cookie / an unknown token still returns 204", async () => {
+      await request(server).post("/auth/logout").expect(204);
       await request(server)
-        .post("/auth/revoke")
-        .send({ refreshToken: "not-a-real-token" })
+        .post("/auth/logout")
+        .set("Cookie", `${REFRESH_TOKEN_COOKIE_NAME}=not-a-real-token`)
         .expect(204);
+    });
+
+    it("clears the refresh token cookie", async () => {
+      const userId = await registerTestUser("logout-2@tripmind.test");
+      const token = await refreshTokenService.issue(userId);
+
+      const res = await request(server)
+        .post("/auth/logout")
+        .set("Cookie", `${REFRESH_TOKEN_COOKIE_NAME}=${token}`)
+        .expect(204);
+
+      expect(res.headers["set-cookie"]?.[0]).toMatch(
+        new RegExp(`^${REFRESH_TOKEN_COOKIE_NAME}=;`),
+      );
     });
   });
 
-  describe("POST /auth/revoke-all", () => {
+  describe("POST /auth/logout-all", () => {
     it("revokes every refresh token for the current user, not other users'", async () => {
-      const userId = await registerTestUser("revoke-all-1@tripmind.test");
-      const otherUserId = await registerTestUser("revoke-all-2@tripmind.test");
+      const userId = await registerTestUser("logout-all-1@tripmind.test");
+      const otherUserId = await registerTestUser("logout-all-2@tripmind.test");
 
       const tokenA1 = await refreshTokenService.issue(userId);
       const tokenA2 = await refreshTokenService.issue(userId);
@@ -85,17 +109,17 @@ describe("POST /auth/revoke, /auth/revoke-all (integration)", () => {
 
       const accessToken = await jwtService.signAccessToken(userId);
       await request(server)
-        .post("/auth/revoke-all")
+        .post("/auth/logout-all")
         .set("Authorization", `Bearer ${accessToken}`)
         .expect(204);
 
-      await request(server).post("/auth/refresh").send({ refreshToken: tokenA1 }).expect(401);
-      await request(server).post("/auth/refresh").send({ refreshToken: tokenA2 }).expect(401);
-      await request(server).post("/auth/refresh").send({ refreshToken: tokenOther }).expect(200);
+      await refreshWithCookie(tokenA1).expect(401);
+      await refreshWithCookie(tokenA2).expect(401);
+      await refreshWithCookie(tokenOther).expect(200);
     });
 
     it("rejects without a valid access token (401)", async () => {
-      await request(server).post("/auth/revoke-all").expect(401);
+      await request(server).post("/auth/logout-all").expect(401);
     });
   });
 });

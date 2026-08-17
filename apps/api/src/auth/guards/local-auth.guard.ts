@@ -4,7 +4,9 @@ import { loginSchema } from "@tripmind/shared";
 import type { Request } from "express";
 
 /**
- * Chạy LocalStrategy; nếu ok thì `logIn()` ghi user vào session (cookie).
+ * Chạy LocalStrategy để verify email/password — chỉ gán `request.user` (đọc qua
+ * `@CurrentUser()`), KHÔNG ghi session (Phase 2 task #6: login trả JWT, AuthController
+ * tự ký access/refresh token sau khi guard này pass — không còn session cookie).
  * Validate body trước vì Nest chạy Guard trước Pipe — nếu không, lỗi format sẽ thành 401 thay vì 400.
  */
 @Injectable()
@@ -23,12 +25,7 @@ export class LocalAuthGuard extends AuthGuard("local") {
       });
     }
     request.body = parsed.data;
-    
-    // Chạy LocalStrategy.validate()
-    const activated = (await super.canActivate(context)) as boolean;
-    // Gọi logIn() để ghi user vào session (cookie) thông qua SessionSerializer
-    await super.logIn(request);
-    
-    return activated;
+
+    return (await super.canActivate(context)) as boolean;
   }
 }
