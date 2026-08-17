@@ -29,6 +29,15 @@ describe("RefreshTokenService", () => {
         if (row) rowsByTokenHash.delete(row.tokenHash);
         return row;
       }),
+      deleteMany: jest.fn(async ({ where }: { where: { tokenHash?: string; userId?: string } }) => {
+        const rowsToDelete = [...rowsByTokenHash.values()].filter(
+          (candidate) =>
+            (where.tokenHash === undefined || candidate.tokenHash === where.tokenHash) &&
+            (where.userId === undefined || candidate.userId === where.userId),
+        );
+        for (const row of rowsToDelete) rowsByTokenHash.delete(row.tokenHash);
+        return { count: rowsToDelete.length };
+      }),
     },
   };
 
@@ -105,5 +114,30 @@ describe("RefreshTokenService", () => {
     await expect(refreshTokenService.rotate(expiredToken)).rejects.toBeInstanceOf(
       UnauthorizedException,
     );
+  });
+
+  it("revoke() xóa đúng token đó, token bị revoke rồi rotate() phải throw Unauthorized", async () => {
+    const token = await refreshTokenService.issue("user-1");
+
+    await refreshTokenService.revoke(token);
+
+    expect(rowsByTokenHash.size).toBe(0);
+    await expect(refreshTokenService.rotate(token)).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it("revoke() với token không tồn tại không throw (idempotent, giống logout thường)", async () => {
+    await expect(refreshTokenService.revoke("token-khong-ton-tai")).resolves.toBeUndefined();
+  });
+
+  it("revokeAll() xóa hết token của user đó, không đụng token user khác", async () => {
+    const tokenA1 = await refreshTokenService.issue("user-a");
+    const tokenA2 = await refreshTokenService.issue("user-a");
+    const tokenB1 = await refreshTokenService.issue("user-b");
+
+    await refreshTokenService.revokeAll("user-a");
+
+    await expect(refreshTokenService.rotate(tokenA1)).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(refreshTokenService.rotate(tokenA2)).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(refreshTokenService.rotate(tokenB1)).resolves.toMatchObject({ userId: "user-b" });
   });
 });

@@ -86,6 +86,32 @@ export class AuthController {
   }
 
   /**
+   * Thu hồi 1 refresh token cụ thể (thiết bị hiện tại). Đặt tên khác `/auth/logout`
+   * hiện có (session-based) để không đụng route — task #6 sẽ dọn/thay thế khi migrate
+   * thật. Idempotent: token sai/đã hết hạn/đã revoke rồi vẫn trả 204, không throw.
+   */
+  @Post("revoke")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async revoke(@Body(new ZodValidationPipe(refreshTokenSchema)) body: RefreshTokenInput): Promise<void> {
+    await this.refreshTokenService.revoke(body.refreshToken);
+  }
+
+  /**
+   * Thu hồi TOÀN BỘ refresh token của user hiện tại (đăng xuất mọi thiết bị) — cần
+   * access token JWT hợp lệ (JwtAuthGuard) để biết chắc đang thu hồi đúng user nào,
+   * không lấy userId từ body (tránh thu hồi hộ user khác).
+   */
+  @Post("revoke-all")
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async revokeAll(@Req() req: Request): Promise<void> {
+    if (!req.jwtUser) {
+      throw new Error("JwtAuthGuard đã pass nhưng thiếu req.jwtUser — kiểm tra lại guard");
+    }
+    await this.refreshTokenService.revokeAll(req.jwtUser.id);
+  }
+
+  /**
    * Route test tạm cho JwtAuthGuard (Phase 2 task #3) — chứng minh verify JWT offline
    * hoạt động. KHÔNG phải API thật, chưa route CRUD nào dùng JwtAuthGuard.
    * Dọn ở task #6 khi migrate login/me thật sang JWT.

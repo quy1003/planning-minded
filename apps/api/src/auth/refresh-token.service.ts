@@ -55,4 +55,18 @@ export class RefreshTokenService {
     const newToken = await this.issue(existingRefreshToken.userId);
     return { userId: existingRefreshToken.userId, newToken };
   }
+
+  /**
+   * Thu hồi đúng 1 token (thiết bị hiện tại — vd logout). `deleteMany` (không phải
+   * `delete`) — idempotent: token sai/đã hết hạn/đã bị revoke rồi vẫn không throw,
+   * đúng ngữ nghĩa logout thông thường (khác `rotate()` — bước bảo mật, phải throw rõ).
+   */
+  async revoke(token: string): Promise<void> {
+    await this.prisma.refreshToken.deleteMany({ where: { tokenHash: hashToken(token) } });
+  }
+
+  /** Thu hồi TOÀN BỘ refresh token của 1 user (đăng xuất mọi thiết bị). */
+  async revokeAll(userId: string): Promise<void> {
+    await this.prisma.refreshToken.deleteMany({ where: { userId } });
+  }
 }
