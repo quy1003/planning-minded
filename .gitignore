@@ -1,5 +1,8 @@
 node_modules/
 dist/
+# Prisma client generate ra thư mục riêng mỗi app (tránh dedupe pnpm ghi đè
+# giữa apps/api và apps/auth-service — xem comment trong prisma/schema.prisma).
+**/src/generated/
 .turbo/
 .next/
 .env

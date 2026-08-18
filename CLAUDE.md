@@ -19,20 +19,32 @@ Tôi (chủ repo) trình độ **junior**. Claude Code đóng vai trò **lập t
 - Khi code: đi **từng bước nhỏ một** (vd 1 file/1 khái niệm một lần), sau mỗi bước dừng lại giải thích ngắn gọn — code vừa viết làm gì, vì sao chọn cách này, có gì tôi cần biết. Không chạy liền một mạch nhiều bước rồi mới tổng kết ở cuối.
 - Luôn đưa lệnh cụ thể để tôi **tự chạy/test** từng phần (vd `curl ...`, `pnpm ...`) thay vì tự chạy hết rồi chỉ báo kết quả.
 
-## Giai đoạn hiện tại: Phase 1 — Modular monolith
-Đang ở `apps/api`: MỘT NestJS app chứa các module `auth/`, `trip/`, `catalog/` (hiện là placeholder rỗng), ranh giới module rõ ràng, giao tiếp qua interface nội bộ — **chưa** tách microservices, chưa có gRPC/RabbitMQ/ai-service. Đừng nhảy sang Phase 2/3 (tách service) khi chưa xong CRUD trip thủ công + auth cơ bản của Phase 1 (xem `docs/03-roadmap.md`).
+## Giai đoạn hiện tại: Phase 2 hoàn thành (JWT auth + tách `auth-service`) — chuẩn bị Phase 3
+Phase 1 (CRUD trip thủ công + auth session) xong. Phase 2 (JWT/EdDSA, JWKS, refresh rotation,
+revocation, rate limit, tách `auth-service`) xong 7/7 task — xem `docs/learning/36-phase2-index.md`.
+`auth-service` đã tách thành app NestJS riêng (ngoại lệ roadmap cho phép trước Phase 3). `apps/api`
+giờ chỉ còn `trip/`, `catalog/` (placeholder rỗng) — **chưa** tách 2 module này thành service riêng,
+**chưa** có gRPC/RabbitMQ/ai-service/database-per-service — đó là việc Phase 3. Đừng nhảy sang tách
+`trip-service`/`catalog-service` khi Phase 3 chưa được chủ động bắt đầu.
 
 ## Commands
 ```bash
-pnpm dev                     # chạy apps/api (turbo)
+pnpm dev                     # chạy cả 3 app: api (:3000), web (:3001), auth-service (:3002) — turbo
 pnpm test                    # unit tests
 pnpm lint && pnpm typecheck
 docker compose -f infra/docker-compose.yml up -d   # postgres + redis
-pnpm --filter @tripmind/api <cmd>                   # chạy riêng app api
+pnpm --filter @tripmind/api <cmd>                   # chạy riêng 1 app (đổi tên package tương ứng)
 ```
 
 ## Cấu trúc
-`apps/api` = NestJS modular monolith (Phase 1). `apps/web` (Next.js) sẽ thêm khi làm F-epic. `packages/shared` = DTOs, zod schemas, event contracts — **mọi contract liên module phải khai báo ở đây**, không duplicate. `packages/config` = tsconfig/eslint/prettier dùng chung.
+`apps/api` = NestJS, chỉ còn `trip/`, `catalog/` (module `auth/` đã tách sang `apps/auth-service`,
+task #7 Phase 2) — chỉ giữ `JwtAuthGuard` để verify JWT qua JWKS. `apps/auth-service` = NestJS
+riêng, giữ private key JWT, đăng ký/đăng nhập/refresh/revoke/rate-limit. `apps/web` (Next.js) —
+rewrite `/api/auth/*` sang `auth-service`, `/api/*` còn lại sang `apps/api`. `packages/shared` =
+DTOs, zod schemas, event contracts — **mọi contract liên module phải khai báo ở đây**, không
+duplicate. `packages/config` = tsconfig/eslint/prettier dùng chung. Mỗi app Prisma generate
+Client vào `src/generated/prisma-client` riêng (không dùng vị trí mặc định — tránh 2 app dedupe
+đè lên nhau qua pnpm, xem `docs/adr/008-auth-service-extraction.md`).
 
 ## Conventions
 - TypeScript strict, không `any` (dùng `unknown` + narrow).
@@ -51,7 +63,7 @@ pnpm --filter @tripmind/api <cmd>                   # chạy riêng app api
 - Không commit secrets. Không log PII/tokens.
 
 ## Security (nghiêm ngặt)
-- JWT: EdDSA, verify bằng JWKS của auth-service (khi tách ở Phase 2). KHÔNG bao giờ dùng HS256 hay hardcode key.
+- JWT: EdDSA, verify bằng JWKS của `auth-service` (đã tách — Phase 2 task #7). KHÔNG bao giờ dùng HS256 hay hardcode key.
 - Password: argon2id. Refresh tokens: hash trước khi lưu, rotation bắt buộc.
 - Mọi endpoint mutation: auth guard + ownership check (`userId` từ token, không từ body).
 - Thay đổi liên quan auth → nhắc tôi chạy /security-review trước khi merge.
