@@ -16,10 +16,3 @@ export const loginSchema = z.object({
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
-
-/** Body refresh token — 1 chuỗi random hex (không phải JWT, không cần verify chữ ký). */
-export const refreshTokenSchema = z.object({
-  refreshToken: z.string().min(1, "refreshToken bắt buộc"),
-});
-
-export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
