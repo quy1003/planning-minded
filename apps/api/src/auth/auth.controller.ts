@@ -19,6 +19,7 @@ import { ConfigService } from "../config/config.service";
 import { AuthService } from "./auth.service";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { LocalAuthGuard } from "./guards/local-auth.guard";
+import { LoginRateLimitGuard } from "./guards/login-rate-limit.guard";
 import { JwtService } from "./jwt.service";
 import { clearRefreshTokenCookie, REFRESH_TOKEN_COOKIE_NAME, setRefreshTokenCookie } from "./refresh-token-cookie";
 import { RefreshTokenService } from "./refresh-token.service";
@@ -56,7 +57,7 @@ export class AuthController {
   }
 
   @Post("login")
-  @UseGuards(LocalAuthGuard)
+  @UseGuards(LoginRateLimitGuard, LocalAuthGuard)
   @HttpCode(HttpStatus.OK)
   async login(
     @CurrentUser() user: AuthUser,
