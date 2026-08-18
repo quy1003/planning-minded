@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { envSchema, type Env, type JwtPrivateJwk, type JwtPublicJwk } from "./env.schema";
+import { envSchema, type Env } from "./env.schema";
 
 @Injectable()
 export class ConfigService {
@@ -22,10 +22,6 @@ export class ConfigService {
     return this.env.DATABASE_URL;
   }
 
-  get redisUrl(): string {
-    return this.env.REDIS_URL;
-  }
-
   get isProduction(): boolean {
     return this.env.NODE_ENV === "production";
   }
@@ -34,28 +30,11 @@ export class ConfigService {
     return this.env.WEB_ORIGIN;
   }
 
-  /** Private JWK (có `d`) — chỉ dùng để ký token, không bao giờ log/return ra HTTP. */
-  get jwtPrivateJwk(): JwtPrivateJwk {
-    return this.env.JWT_PRIVATE_JWK;
-  }
-
-  /** Public JWK (không có `d`) — đưa vào JWKS endpoint. */
-  get jwtPublicJwk(): JwtPublicJwk {
-    const publicJwk: JwtPrivateJwk = { ...this.env.JWT_PRIVATE_JWK };
-    delete (publicJwk as Partial<JwtPrivateJwk>).d;
-    return publicJwk;
-  }
-
-  get jwtKeyId(): string {
-    return this.env.JWT_PRIVATE_JWK.kid;
-  }
-
   /**
-   * URL JWKS của chính app này — gọi qua loopback (`localhost:PORT`), không phải domain public.
-   * Guard verify JWT chạy trong CÙNG process đang serve endpoint này, nên loopback luôn đúng dù
-   * production đứng sau reverse proxy nào (proxy không liên quan tới traffic nội bộ này).
+   * URL JWKS của auth-service (Phase 2 task #7) — gọi qua network thật, khác
+   * monolith cũ tự loopback vào chính mình (task #1-#6).
    */
   get jwksUrl(): string {
-    return `http://localhost:${this.env.PORT}/.well-known/jwks.json`;
+    return `${this.env.AUTH_SERVICE_URL}/.well-known/jwks.json`;
   }
 }

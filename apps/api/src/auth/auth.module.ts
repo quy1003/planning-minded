@@ -1,29 +1,13 @@
 import { Module } from "@nestjs/common";
-import { PassportModule } from "@nestjs/passport";
-import { AuthController } from "./auth.controller";
-import { AuthService } from "./auth.service";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
-import { LocalAuthGuard } from "./guards/local-auth.guard";
-import { LoginRateLimitGuard } from "./guards/login-rate-limit.guard";
-import { JwksController } from "./jwks.controller";
-import { JwtService } from "./jwt.service";
-import { RefreshTokenService } from "./refresh-token.service";
-import { LocalStrategy } from "./strategies/local.strategy";
 
+/**
+ * Phase 2 task #7: đăng ký/đăng nhập/refresh/revoke đã chuyển hết sang
+ * apps/auth-service. apps/api chỉ còn VERIFY token — JwtAuthGuard fetch JWKS
+ * qua network thật tới auth-service (không còn loopback nội bộ như monolith cũ).
+ */
 @Module({
-  // session: false — task #6 bỏ hẳn session, login/register giờ trả JWT.
-  imports: [PassportModule.register({ session: false })],
-  controllers: [AuthController, JwksController],
-  providers: [
-    AuthService,
-    JwtService,
-    RefreshTokenService,
-    LocalStrategy,
-    LocalAuthGuard,
-    JwtAuthGuard,
-    LoginRateLimitGuard,
-  ],
-  // JwtAuthGuard export để TripModule (module khác) dùng chung, thay SessionAuthGuard cũ.
-  exports: [AuthService, JwtService, RefreshTokenService, JwtAuthGuard],
+  providers: [JwtAuthGuard],
+  exports: [JwtAuthGuard],
 })
 export class AuthModule {}
