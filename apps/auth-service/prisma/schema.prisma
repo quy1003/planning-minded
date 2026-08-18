@@ -1,0 +1,47 @@
+// apps/auth-service/prisma/schema.prisma
+// Phase 2 task #7: tách auth ra service riêng. Vẫn dùng CHUNG 1 Postgres với
+// apps/api (database-per-service thật là việc Phase 3, xem docs/03-roadmap.md)
+// — chỉ tách QUYỀN SỞ HỮU schema: auth-service sở hữu User + RefreshToken,
+// apps/api không còn model nào đụng tới 2 bảng này nữa.
+// Bảng đã tồn tại sẵn trong DB (tạo bởi apps/api trước khi tách) — migration đầu
+// tiên của service này phải baseline (migrate resolve --applied), KHÔNG được
+// migrate dev bình thường (sẽ cố CREATE TABLE lại, lỗi vì bảng đã có).
+
+// output tùy chỉnh — xem comment trong apps/api/prisma/schema.prisma (tránh 2 app
+// dedupe chung 1 vị trí generate trong pnpm store, ghi đè lẫn nhau).
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  avatarUrl    String?
+  preferences  Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
