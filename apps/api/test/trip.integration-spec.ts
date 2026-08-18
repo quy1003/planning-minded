@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import request from "supertest";
@@ -10,43 +11,42 @@ import {
   stopTestInfrastructure,
   type TestInfrastructure,
 } from "./db-test-helper";
+import { startFakeAuthService, type FakeAuthService } from "./fake-auth-service";
 
 describe("Trip (integration)", () => {
   let app: INestApplication;
   let infra: TestInfrastructure;
+  let fakeAuthService: FakeAuthService;
   let server: App;
   let accessToken: string;
 
-  // TripController giờ dùng JwtAuthGuard (task #6) — mọi request phải tự gắn
-  // Authorization: Bearer, không còn tự động qua cookie session như trước.
+  // TripController dùng JwtAuthGuard — mọi request phải tự gắn Authorization: Bearer.
   function authed(method: "get" | "post" | "patch" | "delete", path: string): request.Test {
     return request(server)[method](path).set("Authorization", `Bearer ${accessToken}`);
   }
 
   beforeAll(async () => {
     infra = await startTestInfrastructure();
+
+    // apps/api không còn tự ký/serve JWKS (task #7 — auth-service giữ hết) — JwtAuthGuard
+    // vẫn fetch JWKS qua HTTP thật, nên cần 1 "auth-service giả" phục vụ đúng vai trò đó.
+    // Phải set AUTH_SERVICE_URL TRƯỚC khi Nest tạo ConfigService (đọc process.env lúc construct).
+    fakeAuthService = await startFakeAuthService(3098);
+    process.env.AUTH_SERVICE_URL = fakeAuthService.url;
+
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication();
     const configService = app.get(ConfigService);
     configureApp(app, configService);
-    // JwtAuthGuard (TripController) tự fetch JWKS của chính app này qua HTTP thật —
-    // phải thật sự listen ở đúng port configService.port thì mới fetch được.
     await app.listen(configService.port);
     server = app.getHttpServer() as App;
 
-    await request(server)
-      .post("/auth/register")
-      .send({ email: "tripper@tripmind.test", password: "password123", name: "Tripper" })
-      .expect(201);
-    const login = await request(server)
-      .post("/auth/login")
-      .send({ email: "tripper@tripmind.test", password: "password123" })
-      .expect(200);
-    accessToken = login.body.data.accessToken as string;
+    accessToken = await fakeAuthService.signAccessToken(randomUUID());
   }, 120_000);
 
   afterAll(async () => {
     if (app) await app.close();
+    if (fakeAuthService) await fakeAuthService.close();
     if (infra) await stopTestInfrastructure(infra);
   });
 

@@ -1,37 +1,22 @@
 import { execSync } from "node:child_process";
 import * as path from "node:path";
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
-import { RedisContainer, type StartedRedisContainer } from "@testcontainers/redis";
 
 export type TestInfrastructure = {
   postgres: StartedPostgreSqlContainer;
-  redis: StartedRedisContainer;
 };
 
 /**
- * Bật Postgres + Redis tạm, set process.env, đẩy schema bằng `prisma db push`.
+ * Bật Postgres tạm, set process.env, đẩy schema bằng `prisma db push`.
  * Gọi TRƯỚC khi Nest tạo AppModule (ConfigService đọc env lúc construct).
+ * apps/api không còn dùng Redis (task #7 — chuyển hết sang auth-service).
  */
 export async function startTestInfrastructure(): Promise<TestInfrastructure> {
-  const [postgres, redis] = await Promise.all([
-    new PostgreSqlContainer("postgres:17-alpine").start(),
-    new RedisContainer("redis:7-alpine").start(),
-  ]);
+  const postgres = await new PostgreSqlContainer("postgres:17-alpine").start();
 
   process.env.NODE_ENV = "test";
   process.env.PORT = "3001";
   process.env.DATABASE_URL = postgres.getConnectionUri();
-  process.env.REDIS_URL = redis.getConnectionUrl();
-  // Keypair disposable chỉ dùng trong test — không phải key thật của môi trường local/prod.
-  process.env.JWT_PRIVATE_JWK = JSON.stringify({
-    crv: "Ed25519",
-    d: "RbCp_y-14dBXUwsobexKEGv7uyr5EER0qwo20Vq5LYc",
-    x: "i-hP5gzWiXKIwZj8tYA7Yu4GPwZfpvs6fdOFQkQr_8Q",
-    kty: "OKP",
-    kid: "test-jwt-key-id",
-    alg: "EdDSA",
-    use: "sig",
-  });
 
   execSync("pnpm exec prisma db push --skip-generate --accept-data-loss", {
     cwd: path.resolve(__dirname, ".."),
@@ -39,9 +24,9 @@ export async function startTestInfrastructure(): Promise<TestInfrastructure> {
     stdio: "inherit",
   });
 
-  return { postgres, redis };
+  return { postgres };
 }
 
 export async function stopTestInfrastructure(infra: TestInfrastructure): Promise<void> {
-  await Promise.all([infra.postgres.stop(), infra.redis.stop()]);
+  await infra.postgres.stop();
 }
