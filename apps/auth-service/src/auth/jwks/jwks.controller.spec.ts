@@ -1,6 +1,6 @@
 import { Test } from "@nestjs/testing";
-import { ConfigService } from "../config/config.service";
-import type { JwtPublicJwk } from "../config/env.schema";
+import { ConfigService } from "../../config/config.service";
+import type { JwtPublicJwk } from "../../config/env.schema";
 import { JwksController } from "./jwks.controller";
 
 describe("JwksController", () => {

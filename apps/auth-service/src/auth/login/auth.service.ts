@@ -1,10 +1,10 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { Prisma } from "../generated/prisma-client";
+import { Prisma } from "../../generated/prisma-client";
 import type { RegisterInput } from "@tripmind/shared";
-import type { AuthUser } from "../common/decorators/current-user.decorator";
-import { BusinessException } from "../common/exceptions/business.exception";
-import { PrismaService } from "../prisma/prisma.service";
-import { hashPassword, verifyPassword } from "./utils/password.util";
+import type { AuthUser } from "../../common/decorators/current-user.decorator";
+import { BusinessException } from "../../common/exceptions/business.exception";
+import { PrismaService } from "../../prisma/prisma.service";
+import { hashPassword, verifyPassword } from "./password.util";
 
 function toAuthUser(user: { id: string; email: string; name: string | null }): AuthUser {
   return { id: user.id, email: user.email, name: user.name };

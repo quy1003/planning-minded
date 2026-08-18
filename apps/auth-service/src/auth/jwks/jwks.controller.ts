@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
-import { SkipResponseTransform } from "../common/decorators/skip-response-transform.decorator";
-import { ConfigService } from "../config/config.service";
-import type { JwtPublicJwk } from "../config/env.schema";
+import { SkipResponseTransform } from "../../common/decorators/skip-response-transform.decorator";
+import { ConfigService } from "../../config/config.service";
+import type { JwtPublicJwk } from "../../config/env.schema";
 
 export type JwksResponse = {
   keys: JwtPublicJwk[];

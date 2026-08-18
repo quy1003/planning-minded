@@ -1,7 +1,7 @@
 import { Test } from "@nestjs/testing";
 import { SignJWT, importJWK } from "jose";
-import { ConfigService } from "../config/config.service";
-import type { JwtPrivateJwk, JwtPublicJwk } from "../config/env.schema";
+import { ConfigService } from "../../config/config.service";
+import type { JwtPrivateJwk, JwtPublicJwk } from "../../config/env.schema";
 import { JwtService } from "./jwt.service";
 
 // Keypair disposable chỉ dùng trong test — không phải key thật (giống test/db-test-helper.ts).

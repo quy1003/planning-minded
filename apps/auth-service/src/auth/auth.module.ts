@@ -1,14 +1,14 @@
 import { Module } from "@nestjs/common";
 import { PassportModule } from "@nestjs/passport";
 import { AuthController } from "./auth.controller";
-import { AuthService } from "./auth.service";
-import { JwtAuthGuard } from "./guards/jwt-auth.guard";
-import { LocalAuthGuard } from "./guards/local-auth.guard";
-import { LoginRateLimitGuard } from "./guards/login-rate-limit.guard";
-import { JwksController } from "./jwks.controller";
-import { JwtService } from "./jwt.service";
-import { RefreshTokenService } from "./refresh-token.service";
-import { LocalStrategy } from "./strategies/local.strategy";
+import { JwtAuthGuard } from "./jwt/jwt-auth.guard";
+import { JwtService } from "./jwt/jwt.service";
+import { JwksController } from "./jwks/jwks.controller";
+import { AuthService } from "./login/auth.service";
+import { LocalAuthGuard } from "./login/local-auth.guard";
+import { LocalStrategy } from "./login/local.strategy";
+import { LoginRateLimitGuard } from "./rate-limit/login-rate-limit.guard";
+import { RefreshTokenService } from "./refresh-token/refresh-token.service";
 
 @Module({
   // session: false — task #6 bỏ hẳn session, login/register giờ trả JWT.

@@ -16,13 +16,17 @@ import { CurrentUser, type AuthUser } from "../common/decorators/current-user.de
 import { CurrentUserId } from "../common/decorators/current-user-id.decorator";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
 import { ConfigService } from "../config/config.service";
-import { AuthService } from "./auth.service";
-import { JwtAuthGuard } from "./guards/jwt-auth.guard";
-import { LocalAuthGuard } from "./guards/local-auth.guard";
-import { LoginRateLimitGuard } from "./guards/login-rate-limit.guard";
-import { JwtService } from "./jwt.service";
-import { clearRefreshTokenCookie, REFRESH_TOKEN_COOKIE_NAME, setRefreshTokenCookie } from "./refresh-token-cookie";
-import { RefreshTokenService } from "./refresh-token.service";
+import { JwtAuthGuard } from "./jwt/jwt-auth.guard";
+import { JwtService } from "./jwt/jwt.service";
+import { AuthService } from "./login/auth.service";
+import { LocalAuthGuard } from "./login/local-auth.guard";
+import { LoginRateLimitGuard } from "./rate-limit/login-rate-limit.guard";
+import {
+  clearRefreshTokenCookie,
+  REFRESH_TOKEN_COOKIE_NAME,
+  setRefreshTokenCookie,
+} from "./refresh-token/refresh-token-cookie";
+import { RefreshTokenService } from "./refresh-token/refresh-token.service";
 
 export type AuthTokenResponse = {
   accessToken: string;

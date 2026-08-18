@@ -3,9 +3,9 @@ import { Test } from "@nestjs/testing";
 import request from "supertest";
 import type { App } from "supertest/types";
 import { AppModule } from "../src/app.module";
-import { JwtService } from "../src/auth/jwt.service";
-import { REFRESH_TOKEN_COOKIE_NAME } from "../src/auth/refresh-token-cookie";
-import { RefreshTokenService } from "../src/auth/refresh-token.service";
+import { JwtService } from "../src/auth/jwt/jwt.service";
+import { REFRESH_TOKEN_COOKIE_NAME } from "../src/auth/refresh-token/refresh-token-cookie";
+import { RefreshTokenService } from "../src/auth/refresh-token/refresh-token.service";
 import { configureApp } from "../src/bootstrap/configure-app";
 import { ConfigService } from "../src/config/config.service";
 import {

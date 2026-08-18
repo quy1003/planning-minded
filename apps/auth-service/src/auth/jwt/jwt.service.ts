@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { importJWK, jwtVerify, SignJWT } from "jose";
-import { ConfigService } from "../config/config.service";
+import { ConfigService } from "../../config/config.service";
 
 const ACCESS_TOKEN_TTL = "15m";
 

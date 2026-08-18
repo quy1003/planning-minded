@@ -1,5 +1,5 @@
 import type { Response } from "express";
-import type { ConfigService } from "../config/config.service";
+import type { ConfigService } from "../../config/config.service";
 import { REFRESH_TOKEN_TTL_MS } from "./refresh-token.service";
 
 /** Tên cookie refresh token — khác `tripmind.sid` (session cũ, đã bỏ ở task #6). */

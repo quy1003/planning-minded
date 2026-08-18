@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { UnauthorizedException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import { PrismaService } from "../prisma/prisma.service";
+import { PrismaService } from "../../prisma/prisma.service";
 import { RefreshTokenService } from "./refresh-token.service";
 
 type FakeRefreshTokenRow = {

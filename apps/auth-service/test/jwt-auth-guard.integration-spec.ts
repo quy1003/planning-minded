@@ -3,7 +3,7 @@ import { Test } from "@nestjs/testing";
 import { importJWK, SignJWT } from "jose";
 import request from "supertest";
 import type { App } from "supertest/types";
-import { JwtService } from "../src/auth/jwt.service";
+import { JwtService } from "../src/auth/jwt/jwt.service";
 import { AppModule } from "../src/app.module";
 import { configureApp } from "../src/bootstrap/configure-app";
 import { ConfigService } from "../src/config/config.service";
