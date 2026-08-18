@@ -1,4 +1,4 @@
-import type { ItineraryItem, Place, Trip } from "@prisma/client";
+import type { ItineraryItem, Place, Trip } from "../generated/prisma-client";
 
 /** Prisma @db.Time → "HH:mm:ss" (UTC portion của Date Prisma trả về). */
 function serializeTime(value: Date | null): string | null {

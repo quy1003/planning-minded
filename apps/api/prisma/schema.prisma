@@ -1,44 +1,22 @@
 // apps/api/prisma/schema.prisma
-// Phase 1 modular monolith: User + Trip domain trong cùng 1 DB.
-// userId trên Trip không FK (chuẩn bị tách auth_db sau — docs/06-database-schema.md).
+// Phase 2 task #7: auth đã tách sang apps/auth-service (User + RefreshToken giờ
+// nằm ở đó — vẫn chung 1 Postgres, chỉ tách quyền sở hữu schema, xem
+// docs/adr/008-auth-service-extraction.md). apps/api KHÔNG còn model nào đụng
+// tới users/refresh_tokens. Migration lịch sử (init_user, add_refresh_token) vẫn
+// giữ nguyên trong prisma/migrations/ — không xóa, chỉ là bản ghi lịch sử.
+// userId trên Trip vẫn không FK (cross-domain, đã cố tình từ đầu).
 
+// output tùy chỉnh (không dùng mặc định node_modules/@prisma/client) — pnpm dedupe
+// 2 app cùng version @prisma/client vào CHUNG 1 chỗ trong store, generate cho app
+// này sẽ ghi đè client của app kia (apps/auth-service) nếu dùng vị trí mặc định.
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma-client"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
-  name         String?
-  avatarUrl    String?
-  preferences  Json?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  refreshTokens RefreshToken[]
-
-  @@map("users")
-}
-
-// Cùng domain auth với User (khác Trip.userId — cố tình không FK vì cross-domain,
-// xem comment đầu file) nên FK thật hợp lý: xóa User thì tự dọn refresh token của họ.
-// Xem docs/adr/006-refresh-token-storage.md.
-model RefreshToken {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tokenHash String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@map("refresh_tokens")
 }
 
 enum TripStatus {

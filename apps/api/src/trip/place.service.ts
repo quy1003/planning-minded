@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../generated/prisma-client";
 import type { CreatePlaceInput, UpdatePlaceInput } from "@tripmind/shared";
 import { BusinessException } from "../common/exceptions/business.exception";
 import { serializePlace } from "./trip.serializer";

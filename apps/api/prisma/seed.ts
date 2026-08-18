@@ -1,35 +1,34 @@
 // Chạy tự động sau `prisma migrate dev` / `prisma migrate reset` (cấu hình ở package.json field "prisma.seed").
 // Chạy thủ công: pnpm prisma:seed
-import { PrismaClient } from "@prisma/client";
-import * as argon2 from "argon2";
+// LƯU Ý thứ tự (task #7): chạy `pnpm --filter @tripmind/auth-service prisma:seed`
+// TRƯỚC — file này chỉ TRA userId theo email qua raw SQL (bảng `users` không còn
+// model trong schema apps/api nữa, đã tách sang auth-service).
+import { PrismaClient } from "../src/generated/prisma-client";
 
 const prisma = new PrismaClient();
 
-/** Password demo chỉ dùng local — không dùng trên môi trường thật. */
-const DEMO_PASSWORD = "password123";
-
 async function main() {
-  const passwordHash = await argon2.hash(DEMO_PASSWORD, { type: argon2.argon2id });
-
-  const user = await prisma.user.upsert({
-    where: { email: "demo@tripmind.local" },
-    update: { passwordHash },
-    create: {
-      email: "demo@tripmind.local",
-      passwordHash,
-      name: "Demo User",
-    },
-  });
+  const [demoUser] = await prisma.$queryRaw<
+    { id: string }[]
+  >`SELECT id FROM users WHERE email = 'demo@tripmind.local' LIMIT 1`;
+  if (!demoUser) {
+    console.error(
+      "Demo user chưa tồn tại — chạy `pnpm --filter @tripmind/auth-service prisma:seed` trước.",
+    );
+    process.exitCode = 1;
+    return;
+  }
+  const userId = demoUser.id;
 
   let trip = await prisma.trip.findFirst({
-    where: { userId: user.id, title: "Đà Lạt 3 ngày (seed)" },
+    where: { userId, title: "Đà Lạt 3 ngày (seed)" },
     include: { places: true, itineraryItems: true },
   });
 
   if (!trip) {
     trip = await prisma.trip.create({
       data: {
-        userId: user.id,
+        userId,
         title: "Đà Lạt 3 ngày (seed)",
         destinationName: "Đà Lạt",
         startDate: new Date("2026-08-01"),
@@ -95,10 +94,7 @@ async function main() {
     console.log(`Seeded itinerary items for trip ${trip.id}`);
   }
 
-  console.log(`Seeded user: ${user.email} (${user.id})`);
-  console.log(`Demo password: ${DEMO_PASSWORD}`);
-
-  await seedMoreTrips(user.id);
+  await seedMoreTrips(userId);
 }
 
 type SeedTripSpec = {
