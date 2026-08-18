@@ -4,7 +4,7 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
-      "env": ["API_INTERNAL_URL", "NEXT_PUBLIC_APP_URL"]
+      "env": ["API_INTERNAL_URL", "AUTH_SERVICE_INTERNAL_URL", "NEXT_PUBLIC_APP_URL"]
     },
     "dev": {
       "dependsOn": ["^build"],
