@@ -1,5 +1,5 @@
 {
-  "name": "@tripmind/api",
+  "name": "@tripmind/trip-service",
   "private": true,
   "version": "0.0.0",
   "scripts": {
@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "test:integration": "jest --config jest.integration.config.js --runInBand --passWithNoTests",
+    "test:integration": "jest --config jest.integration.config.js --runInBand",
     "postinstall": "prisma generate",
     "prisma:generate": "dotenv -e ../../.env -- prisma generate",
     "prisma:migrate": "dotenv -e ../../.env -- prisma migrate dev",

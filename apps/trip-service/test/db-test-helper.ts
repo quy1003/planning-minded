@@ -9,13 +9,13 @@ export type TestInfrastructure = {
 /**
  * Bật Postgres tạm, set process.env, đẩy schema bằng `prisma db push`.
  * Gọi TRƯỚC khi Nest tạo AppModule (ConfigService đọc env lúc construct).
- * apps/api không còn dùng Redis (task #7 — chuyển hết sang auth-service).
+ * trip-service không dùng Redis (task #7 — chuyển hết sang auth-service).
  */
 export async function startTestInfrastructure(): Promise<TestInfrastructure> {
   const postgres = await new PostgreSqlContainer("postgres:17-alpine").start();
 
   process.env.NODE_ENV = "test";
-  process.env.PORT = "3001";
+  process.env.PORT = "3005"; // riêng cho test — tránh đụng dev server thật (3000/3001/3002/3004)
   process.env.DATABASE_URL = postgres.getConnectionUri();
 
   execSync("pnpm exec prisma db push --skip-generate --accept-data-loss", {

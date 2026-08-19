@@ -19,17 +19,18 @@ Tôi (chủ repo) trình độ **junior**. Claude Code đóng vai trò **lập t
 - Khi code: đi **từng bước nhỏ một** (vd 1 file/1 khái niệm một lần), sau mỗi bước dừng lại giải thích ngắn gọn — code vừa viết làm gì, vì sao chọn cách này, có gì tôi cần biết. Không chạy liền một mạch nhiều bước rồi mới tổng kết ở cuối.
 - Luôn đưa lệnh cụ thể để tôi **tự chạy/test** từng phần (vd `curl ...`, `pnpm ...`) thay vì tự chạy hết rồi chỉ báo kết quả.
 
-## Giai đoạn hiện tại: Phase 2 hoàn thành (JWT auth + tách `auth-service`) — chuẩn bị Phase 3
+## Giai đoạn hiện tại: Phase 3 đang làm (tách microservices + gateway)
 Phase 1 (CRUD trip thủ công + auth session) xong. Phase 2 (JWT/EdDSA, JWKS, refresh rotation,
 revocation, rate limit, tách `auth-service`) xong 7/7 task — xem `docs/learning/36-phase2-index.md`.
-`auth-service` đã tách thành app NestJS riêng (ngoại lệ roadmap cho phép trước Phase 3). `apps/api`
-giờ chỉ còn `trip/`, `catalog/` (placeholder rỗng) — **chưa** tách 2 module này thành service riêng,
-**chưa** có gRPC/RabbitMQ/ai-service/database-per-service — đó là việc Phase 3. Đừng nhảy sang tách
-`trip-service`/`catalog-service` khi Phase 3 chưa được chủ động bắt đầu.
+Phase 3 đang làm theo `docs/learning/46-phase3-index.md` — task #1 (route `/api/v1/*`, NestJS URI
+versioning) và #2 (tách `trip-service`) đã xong. `apps/api` giờ chỉ còn `catalog/` (placeholder
+rỗng) + `JwtAuthGuard` — dự kiến bị xoá hẳn sau task #3 (xây `catalog-service` mới). **Chưa** có
+`api-gateway`/gRPC/RabbitMQ/database-per-service thật — đó là các task #3-#8 còn lại của Phase 3.
+Đừng nhảy task khi task hiện tại (theo thứ tự trong `46-phase3-index.md`) chưa xong.
 
 ## Commands
 ```bash
-pnpm dev                     # chạy cả 3 app: api (:3000), web (:3001), auth-service (:3002) — turbo
+pnpm dev                     # chạy 4 app: api (:3000), web (:3001), auth-service (:3002), trip-service (:3004) — turbo
 pnpm test                    # unit tests
 pnpm lint && pnpm typecheck
 docker compose -f infra/docker-compose.yml up -d   # postgres + redis
@@ -37,14 +38,20 @@ pnpm --filter @tripmind/api <cmd>                   # chạy riêng 1 app (đổ
 ```
 
 ## Cấu trúc
-`apps/api` = NestJS, chỉ còn `trip/`, `catalog/` (module `auth/` đã tách sang `apps/auth-service`,
-task #7 Phase 2) — chỉ giữ `JwtAuthGuard` để verify JWT qua JWKS. `apps/auth-service` = NestJS
-riêng, giữ private key JWT, đăng ký/đăng nhập/refresh/revoke/rate-limit. `apps/web` (Next.js) —
-rewrite `/api/auth/*` sang `auth-service`, `/api/*` còn lại sang `apps/api`. `packages/shared` =
-DTOs, zod schemas, event contracts — **mọi contract liên module phải khai báo ở đây**, không
-duplicate. `packages/config` = tsconfig/eslint/prettier dùng chung. Mỗi app Prisma generate
-Client vào `src/generated/prisma-client` riêng (không dùng vị trí mặc định — tránh 2 app dedupe
-đè lên nhau qua pnpm, xem `docs/adr/008-auth-service-extraction.md`).
+`apps/api` = NestJS, chỉ còn `catalog/` (rỗng, chờ task #3 Phase 3) + `JwtAuthGuard` để verify JWT
+qua JWKS (module `auth/` đã tách sang `apps/auth-service` task #7 Phase 2, module `trip/` đã tách
+sang `apps/trip-service` task #2 Phase 3). `apps/auth-service` = NestJS riêng, giữ private key JWT,
+đăng ký/đăng nhập/refresh/revoke/rate-limit. `apps/trip-service` = NestJS riêng, CRUD trip/places/
+itinerary, chỉ giữ `JwtAuthGuard` để verify (giống `apps/api`). `apps/web` (Next.js) — rewrite
+`/api/v1/auth/*` sang `auth-service`, `/api/v1/trips/*` sang `trip-service`, `/api/v1/*` còn lại
+sang `apps/api`. `v1` là NestJS URI versioning thật (`app.enableVersioning(...)` trong
+`bootstrap/configure-app.ts` mỗi service), không phải string tự quản ở tầng rewrite — xem
+`docs/learning/47-api-versioning.md`. `packages/shared` = DTOs, zod schemas, event contracts —
+**mọi contract liên module phải khai báo ở đây**, không duplicate. `packages/config` =
+tsconfig/eslint/prettier dùng chung. Mỗi app Prisma generate Client vào `src/generated/prisma-client`
+riêng (không dùng vị trí mặc định — tránh nhiều app dedupe đè lên nhau qua pnpm, xem
+`docs/adr/008-auth-service-extraction.md`). Mọi service hiện vẫn dùng CHUNG 1 Postgres (chỉ tách
+quyền sở hữu schema, chưa tách DB vật lý — xem `docs/learning/48-trip-service-extraction.md`).
 
 ## Conventions
 - TypeScript strict, không `any` (dùng `unknown` + narrow).

@@ -8,7 +8,7 @@ export type FakeAuthService = {
 };
 
 /**
- * apps/api không còn tự ký/verify JWT (task #7 — auth-service giữ hết) — nhưng
+ * trip-service không tự ký/verify JWT (task #7 — auth-service giữ hết) — nhưng
  * JwtAuthGuard vẫn phải fetch JWKS qua HTTP THẬT (không mock jwtVerify) để test
  * đúng cơ chế offline-verify sẽ chạy trong production. Đây là bản auth-service
  * "giả" tối giản nhất có thể: tự sinh keypair test, serve đúng JWKS thật qua

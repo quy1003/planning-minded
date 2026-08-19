@@ -28,7 +28,7 @@ describe("Trip (integration)", () => {
   beforeAll(async () => {
     infra = await startTestInfrastructure();
 
-    // apps/api không còn tự ký/serve JWKS (task #7 — auth-service giữ hết) — JwtAuthGuard
+    // trip-service không tự ký/serve JWKS (task #7 — auth-service giữ hết) — JwtAuthGuard
     // vẫn fetch JWKS qua HTTP thật, nên cần 1 "auth-service giả" phục vụ đúng vai trò đó.
     // Phải set AUTH_SERVICE_URL TRƯỚC khi Nest tạo ConfigService (đọc process.env lúc construct).
     fakeAuthService = await startFakeAuthService(3098);
