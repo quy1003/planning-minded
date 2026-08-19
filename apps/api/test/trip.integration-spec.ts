@@ -51,7 +51,7 @@ describe("Trip (integration)", () => {
   });
 
   it("CRUD trip + place + itinerary with ownership envelope", async () => {
-    const created = await authed("post", "/trips")
+    const created = await authed("post", "/v1/trips")
       .send({
         title: "Đà Lạt",
         destinationName: "Đà Lạt",
@@ -69,18 +69,18 @@ describe("Trip (integration)", () => {
     });
     const tripId = created.body.data.id as string;
 
-    const place = await authed("post", `/trips/${tripId}/places`)
+    const place = await authed("post", `/v1/trips/${tripId}/places`)
       .send({ name: "Hồ Xuân Hương", lat: 11.94, lng: 108.45 })
       .expect(201);
     expect(place.body.data).toMatchObject({ name: "Hồ Xuân Hương" });
     const placeId = place.body.data.id as string;
 
-    const place2 = await authed("post", `/trips/${tripId}/places`)
+    const place2 = await authed("post", `/v1/trips/${tripId}/places`)
       .send({ name: "Chợ Đà Lạt", lat: 11.941, lng: 108.438 })
       .expect(201);
     const place2Id = place2.body.data.id as string;
 
-    const item = await authed("post", `/trips/${tripId}/itinerary`)
+    const item = await authed("post", `/v1/trips/${tripId}/itinerary`)
       .send({
         placeId,
         dayNumber: 1,
@@ -98,7 +98,7 @@ describe("Trip (integration)", () => {
     });
     const itemId = item.body.data.id as string;
 
-    await authed("post", `/trips/${tripId}/itinerary`)
+    await authed("post", `/v1/trips/${tripId}/itinerary`)
       .send({
         placeId: place2Id,
         dayNumber: 1,
@@ -108,7 +108,7 @@ describe("Trip (integration)", () => {
       })
       .expect(409);
 
-    const item2 = await authed("post", `/trips/${tripId}/itinerary`)
+    const item2 = await authed("post", `/v1/trips/${tripId}/itinerary`)
       .send({
         placeId: place2Id,
         dayNumber: 1,
@@ -118,7 +118,7 @@ describe("Trip (integration)", () => {
       })
       .expect(201);
 
-    const reordered = await authed("patch", `/trips/${tripId}/itinerary/reorder`)
+    const reordered = await authed("patch", `/v1/trips/${tripId}/itinerary/reorder`)
       .send([
         { itemId, dayNumber: 1, slot: "MORNING", visitOrder: 2 },
         { itemId: item2.body.data.id, dayNumber: 1, slot: "MORNING", visitOrder: 1 },
@@ -129,24 +129,24 @@ describe("Trip (integration)", () => {
       "Thăm hồ",
     ]);
 
-    const list = await authed("get", `/trips/${tripId}/itinerary`).expect(200);
+    const list = await authed("get", `/v1/trips/${tripId}/itinerary`).expect(200);
     expect(list.body.data).toHaveLength(2);
 
-    await authed("delete", `/trips/${tripId}/places/${placeId}`).expect(409);
+    await authed("delete", `/v1/trips/${tripId}/places/${placeId}`).expect(409);
 
-    await authed("delete", `/trips/${tripId}/itinerary/${itemId}`).expect(204);
-    await authed("delete", `/trips/${tripId}/itinerary/${item2.body.data.id as string}`).expect(204);
-    await authed("delete", `/trips/${tripId}/places/${placeId}`).expect(204);
+    await authed("delete", `/v1/trips/${tripId}/itinerary/${itemId}`).expect(204);
+    await authed("delete", `/v1/trips/${tripId}/itinerary/${item2.body.data.id as string}`).expect(204);
+    await authed("delete", `/v1/trips/${tripId}/places/${placeId}`).expect(204);
 
-    const detail = await authed("get", `/trips/${tripId}`).expect(200);
+    const detail = await authed("get", `/v1/trips/${tripId}`).expect(200);
     expect(detail.body.data.places).toHaveLength(1);
 
-    await authed("delete", `/trips/${tripId}`).expect(204);
-    await authed("get", `/trips/${tripId}`).expect(404);
+    await authed("delete", `/v1/trips/${tripId}`).expect(204);
+    await authed("get", `/v1/trips/${tripId}`).expect(404);
   });
 
   it("rejects unauthenticated trip list", async () => {
-    const res = await request(server).get("/trips").expect(401);
+    const res = await request(server).get("/v1/trips").expect(401);
     expect(res.body.category).toBe("business");
   });
 });

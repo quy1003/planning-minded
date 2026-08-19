@@ -43,11 +43,11 @@ describe("POST /auth/login rate limit (integration)", () => {
     const email = "brute-force-target@tripmind.test";
 
     for (let i = 0; i < 5; i++) {
-      const res = await request(server).post("/auth/login").send({ email, password: "sai-password" });
+      const res = await request(server).post("/v1/auth/login").send({ email, password: "sai-password" });
       expect(res.status).toBe(401);
     }
 
-    const res = await request(server).post("/auth/login").send({ email, password: "sai-password" });
+    const res = await request(server).post("/v1/auth/login").send({ email, password: "sai-password" });
     expect(res.status).toBe(429);
     expect(res.body.category).toBe("business");
   });
@@ -55,13 +55,13 @@ describe("POST /auth/login rate limit (integration)", () => {
   it("chặn theo IP dù đổi email khác nhau mỗi lần (ngưỡng 20)", async () => {
     for (let i = 0; i < 20; i++) {
       const res = await request(server)
-        .post("/auth/login")
+        .post("/v1/auth/login")
         .send({ email: `attacker-${i}@tripmind.test`, password: "sai-password" });
       expect(res.status).toBe(401);
     }
 
     const res = await request(server)
-      .post("/auth/login")
+      .post("/v1/auth/login")
       .send({ email: "attacker-final@tripmind.test", password: "sai-password" });
     expect(res.status).toBe(429);
   }, 20_000);
@@ -69,14 +69,14 @@ describe("POST /auth/login rate limit (integration)", () => {
   it("login đúng password vẫn tính vào bộ đếm — đúng trade-off 'đếm mọi lần thử' đã chọn", async () => {
     const email = "legit-user@tripmind.test";
     const password = "password123";
-    await request(server).post("/auth/register").send({ email, password }).expect(201);
+    await request(server).post("/v1/auth/register").send({ email, password }).expect(201);
 
     for (let i = 0; i < 5; i++) {
-      const res = await request(server).post("/auth/login").send({ email, password });
+      const res = await request(server).post("/v1/auth/login").send({ email, password });
       expect(res.status).toBe(200);
     }
 
-    const res = await request(server).post("/auth/login").send({ email, password });
+    const res = await request(server).post("/v1/auth/login").send({ email, password });
     expect(res.status).toBe(429);
   });
 });

@@ -49,7 +49,7 @@ describe("POST /auth/refresh (integration)", () => {
   // trong DB trước khi issue() token cho userId đó.
   async function registerTestUser(email: string): Promise<string> {
     const res = await request(server)
-      .post("/auth/register")
+      .post("/v1/auth/register")
       .send({ email, password: "password123" })
       .expect(201);
     return res.body.data.user.id as string;
@@ -57,7 +57,7 @@ describe("POST /auth/refresh (integration)", () => {
 
   // Task #6: refresh token đọc từ cookie httpOnly, KHÔNG còn nhận qua body.
   function withRefreshCookie(token: string) {
-    return request(server).post("/auth/refresh").set("Cookie", `${REFRESH_TOKEN_COOKIE_NAME}=${token}`);
+    return request(server).post("/v1/auth/refresh").set("Cookie", `${REFRESH_TOKEN_COOKIE_NAME}=${token}`);
   }
 
   it("rotates a valid refresh token — returns new access token + sets new refresh cookie", async () => {
@@ -95,7 +95,7 @@ describe("POST /auth/refresh (integration)", () => {
   });
 
   it("rejects when there is no refresh token cookie at all (401)", async () => {
-    const res = await request(server).post("/auth/refresh").expect(401);
+    const res = await request(server).post("/v1/auth/refresh").expect(401);
 
     expect(res.body.category).toBe("business");
   });

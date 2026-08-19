@@ -1,5 +1,5 @@
 /**
- * Fetch wrapper gọi Nest qua same-origin `/api/*` (rewrite).
+ * Fetch wrapper gọi Nest qua same-origin `/api/v1/*` (rewrite).
  * Unwrap `{ data }` success; map problem+json → ApiError.
  * Tự gắn `Authorization: Bearer` (access token); gặp 401 tự refresh 1 lần rồi retry.
  */
@@ -47,7 +47,7 @@ async function refreshAccessToken(): Promise<string | null> {
   if (!refreshPromise) {
     refreshPromise = (async () => {
       try {
-        const res = await fetch("/api/auth/refresh", { method: "POST", credentials: "include" });
+        const res = await fetch("/api/v1/auth/refresh", { method: "POST", credentials: "include" });
         if (!res.ok) return null;
         const payload = (await parseJson(res)) as SuccessEnvelope<{ accessToken: string }> | null;
         const newToken = payload?.data.accessToken ?? null;
@@ -64,7 +64,7 @@ async function refreshAccessToken(): Promise<string | null> {
 }
 
 export async function apiFetch<T>(path: string, init?: RequestInit, isRetry = false): Promise<T> {
-  const url = path.startsWith("/") ? `/api${path}` : `/api/${path}`;
+  const url = path.startsWith("/") ? `/api/v1${path}` : `/api/v1/${path}`;
   const token = getAccessToken();
   const res = await fetch(url, {
     ...init,

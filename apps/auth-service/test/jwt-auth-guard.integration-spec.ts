@@ -51,7 +51,7 @@ describe("JwtAuthGuard (integration, qua GET /auth/me)", () => {
 
   async function registerTestUser(email: string): Promise<string> {
     const res = await request(server)
-      .post("/auth/register")
+      .post("/v1/auth/register")
       .send({ email, password: "password123" })
       .expect(201);
     return res.body.data.user.id as string;
@@ -61,13 +61,13 @@ describe("JwtAuthGuard (integration, qua GET /auth/me)", () => {
     const userId = await registerTestUser("jwt-guard-1@tripmind.test");
     const token = await jwtService.signAccessToken(userId);
 
-    const res = await request(server).get("/auth/me").set("Authorization", `Bearer ${token}`).expect(200);
+    const res = await request(server).get("/v1/auth/me").set("Authorization", `Bearer ${token}`).expect(200);
 
     expect(res.body.data).toMatchObject({ id: userId, email: "jwt-guard-1@tripmind.test" });
   });
 
   it("returns 401 without Authorization header", async () => {
-    const res = await request(server).get("/auth/me").expect(401);
+    const res = await request(server).get("/v1/auth/me").expect(401);
 
     expect(res.headers["content-type"]).toMatch(/application\/problem\+json/);
     expect(res.body.category).toBe("business");
@@ -82,7 +82,7 @@ describe("JwtAuthGuard (integration, qua GET /auth/me)", () => {
       .setExpirationTime(Math.floor(Date.now() / 1000) - 60)
       .sign(privateKey);
 
-    await request(server).get("/auth/me").set("Authorization", `Bearer ${expiredToken}`).expect(401);
+    await request(server).get("/v1/auth/me").set("Authorization", `Bearer ${expiredToken}`).expect(401);
   });
 
   it("returns 401 with a tampered token", async () => {
@@ -97,6 +97,6 @@ describe("JwtAuthGuard (integration, qua GET /auth/me)", () => {
     const tamperedChar = signature[0] === "A" ? "B" : "A";
     const tamperedToken = `${header}.${payload}.${tamperedChar}${signature.slice(1)}`;
 
-    await request(server).get("/auth/me").set("Authorization", `Bearer ${tamperedToken}`).expect(401);
+    await request(server).get("/v1/auth/me").set("Authorization", `Bearer ${tamperedToken}`).expect(401);
   });
 });

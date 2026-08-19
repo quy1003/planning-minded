@@ -51,7 +51,7 @@ describe("POST /auth/logout, /auth/logout-all (integration)", () => {
 
   async function registerTestUser(email: string): Promise<string> {
     const res = await request(server)
-      .post("/auth/register")
+      .post("/v1/auth/register")
       .send({ email, password: "password123" })
       .expect(201);
     return res.body.data.user.id as string;
@@ -59,7 +59,7 @@ describe("POST /auth/logout, /auth/logout-all (integration)", () => {
 
   // Task #6: refresh token đọc từ cookie httpOnly, KHÔNG còn nhận qua body.
   function refreshWithCookie(token: string) {
-    return request(server).post("/auth/refresh").set("Cookie", `${REFRESH_TOKEN_COOKIE_NAME}=${token}`);
+    return request(server).post("/v1/auth/refresh").set("Cookie", `${REFRESH_TOKEN_COOKIE_NAME}=${token}`);
   }
 
   describe("POST /auth/logout", () => {
@@ -68,7 +68,7 @@ describe("POST /auth/logout, /auth/logout-all (integration)", () => {
       const token = await refreshTokenService.issue(userId);
 
       await request(server)
-        .post("/auth/logout")
+        .post("/v1/auth/logout")
         .set("Cookie", `${REFRESH_TOKEN_COOKIE_NAME}=${token}`)
         .expect(204);
 
@@ -76,9 +76,9 @@ describe("POST /auth/logout, /auth/logout-all (integration)", () => {
     });
 
     it("is idempotent — logging out with no cookie / an unknown token still returns 204", async () => {
-      await request(server).post("/auth/logout").expect(204);
+      await request(server).post("/v1/auth/logout").expect(204);
       await request(server)
-        .post("/auth/logout")
+        .post("/v1/auth/logout")
         .set("Cookie", `${REFRESH_TOKEN_COOKIE_NAME}=not-a-real-token`)
         .expect(204);
     });
@@ -88,7 +88,7 @@ describe("POST /auth/logout, /auth/logout-all (integration)", () => {
       const token = await refreshTokenService.issue(userId);
 
       const res = await request(server)
-        .post("/auth/logout")
+        .post("/v1/auth/logout")
         .set("Cookie", `${REFRESH_TOKEN_COOKIE_NAME}=${token}`)
         .expect(204);
 
@@ -109,7 +109,7 @@ describe("POST /auth/logout, /auth/logout-all (integration)", () => {
 
       const accessToken = await jwtService.signAccessToken(userId);
       await request(server)
-        .post("/auth/logout-all")
+        .post("/v1/auth/logout-all")
         .set("Authorization", `Bearer ${accessToken}`)
         .expect(204);
 
@@ -119,7 +119,7 @@ describe("POST /auth/logout, /auth/logout-all (integration)", () => {
     });
 
     it("rejects without a valid access token (401)", async () => {
-      await request(server).post("/auth/logout-all").expect(401);
+      await request(server).post("/v1/auth/logout-all").expect(401);
     });
   });
 });
