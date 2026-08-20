@@ -1,10 +1,10 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { Prisma } from "../generated/prisma-client";
+import { Prisma } from "../../generated/prisma-client";
 import type { CreatePlaceInput, UpdatePlaceInput } from "@tripmind/shared";
-import { BusinessException } from "../common/exceptions/business.exception";
-import { serializePlace } from "./trip.serializer";
-import { TripAccessService } from "./trip-access.service";
-import { TripRepository } from "./trip.repository";
+import { BusinessException } from "../../common/exceptions/business.exception";
+import { serializePlace } from "../core/trip.serializer";
+import { TripAccessService } from "../core/trip-access.service";
+import { TripRepository } from "../core/trip.repository";
 
 @Injectable()
 export class PlaceService {

@@ -1,5 +1,5 @@
 import { HttpStatus } from "@nestjs/common";
-import { BusinessException } from "../common/exceptions/business.exception";
+import { BusinessException } from "../../common/exceptions/business.exception";
 import { TripCrudService } from "./trip-crud.service";
 
 describe("TripCrudService (unit-ish with stub repository/access)", () => {

@@ -5,9 +5,9 @@ import {
   type CreatePoiInput,
   type UpdatePoiInput,
 } from "@tripmind/shared";
-import { AdminGuard } from "../auth/guards/admin.guard";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
+import { AdminGuard } from "../../auth/guards/admin.guard";
+import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { PoiService } from "./poi.service";
 
 /** Poi luôn nằm dưới 1 destination — route `/destinations/:destinationId/pois`, giống cách

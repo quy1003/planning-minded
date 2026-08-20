@@ -1,4 +1,4 @@
-import type { Destination, Poi } from "../generated/prisma-client";
+import type { Destination, Poi } from "../../generated/prisma-client";
 
 /** Prisma Decimal → string (tránh mất chính xác float JSON). */
 export function serializeDestination(destination: Destination & { pois?: Poi[] }) {

@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { BusinessException } from "../common/exceptions/business.exception";
+import { BusinessException } from "../../common/exceptions/business.exception";
 import { CatalogRepository } from "./catalog.repository";
 
 /**

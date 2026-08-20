@@ -1,10 +1,10 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { Prisma } from "../generated/prisma-client";
+import { Prisma } from "../../generated/prisma-client";
 import type { CreatePoiInput, UpdatePoiInput } from "@tripmind/shared";
-import { BusinessException } from "../common/exceptions/business.exception";
-import { CatalogAccessService } from "./catalog-access.service";
-import { serializePoi } from "./catalog.serializer";
-import { CatalogRepository } from "./catalog.repository";
+import { BusinessException } from "../../common/exceptions/business.exception";
+import { CatalogAccessService } from "../core/catalog-access.service";
+import { serializePoi } from "../core/catalog.serializer";
+import { CatalogRepository } from "../core/catalog.repository";
 
 @Injectable()
 export class PoiService {

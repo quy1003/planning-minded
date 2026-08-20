@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Prisma } from "../generated/prisma-client";
+import { Prisma } from "../../generated/prisma-client";
 import type {
   CreateItineraryItemInput,
   CreatePlaceInput,
@@ -9,7 +9,7 @@ import type {
   UpdatePlaceInput,
   UpdateTripInput,
 } from "@tripmind/shared";
-import { PrismaService } from "../prisma/prisma.service";
+import { PrismaService } from "../../prisma/prisma.service";
 
 /** Parse "HH:mm" / "HH:mm:ss" → Date dùng cho Prisma @db.Time. */
 function parseTimeOfDay(value: string): Date {

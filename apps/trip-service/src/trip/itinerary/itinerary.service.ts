@@ -1,15 +1,15 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { Prisma } from "../generated/prisma-client";
+import { Prisma } from "../../generated/prisma-client";
 import type {
   CreateItineraryItemInput,
   DaySlot,
   ReorderItineraryInput,
   UpdateItineraryItemInput,
 } from "@tripmind/shared";
-import { BusinessException } from "../common/exceptions/business.exception";
-import { serializeItineraryItem } from "./trip.serializer";
-import { TripAccessService } from "./trip-access.service";
-import { TripRepository } from "./trip.repository";
+import { BusinessException } from "../../common/exceptions/business.exception";
+import { serializeItineraryItem } from "../core/trip.serializer";
+import { TripAccessService } from "../core/trip-access.service";
+import { TripRepository } from "../core/trip.repository";
 
 function isUniqueViolation(error: unknown): boolean {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";

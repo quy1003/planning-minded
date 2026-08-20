@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Prisma } from "../generated/prisma-client";
+import { Prisma } from "../../generated/prisma-client";
 import type {
   CreateDestinationInput,
   CreatePoiInput,
@@ -7,7 +7,7 @@ import type {
   UpdateDestinationInput,
   UpdatePoiInput,
 } from "@tripmind/shared";
-import { PrismaService } from "../prisma/prisma.service";
+import { PrismaService } from "../../prisma/prisma.service";
 
 /**
  * Chỉ query/ghi DB thô — trả `null` nếu không thấy, không ném exception (giống

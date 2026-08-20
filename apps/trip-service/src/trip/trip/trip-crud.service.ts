@@ -1,9 +1,9 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import type { CreateTripInput, UpdateTripInput } from "@tripmind/shared";
-import { BusinessException } from "../common/exceptions/business.exception";
-import { serializeTrip } from "./trip.serializer";
-import { TripAccessService } from "./trip-access.service";
-import { TripRepository } from "./trip.repository";
+import { BusinessException } from "../../common/exceptions/business.exception";
+import { serializeTrip } from "../core/trip.serializer";
+import { TripAccessService } from "../core/trip-access.service";
+import { TripRepository } from "../core/trip.repository";
 
 @Injectable()
 export class TripCrudService {

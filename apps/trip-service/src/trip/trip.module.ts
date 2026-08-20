@@ -1,15 +1,17 @@
 import { Module } from "@nestjs/common";
 import { AuthModule } from "../auth/auth.module";
-import { ItineraryService } from "./itinerary.service";
-import { PlaceService } from "./place.service";
-import { TripAccessService } from "./trip-access.service";
-import { TripController } from "./trip.controller";
-import { TripCrudService } from "./trip-crud.service";
-import { TripRepository } from "./trip.repository";
+import { ItineraryController } from "./itinerary/itinerary.controller";
+import { ItineraryService } from "./itinerary/itinerary.service";
+import { PlaceController } from "./place/place.controller";
+import { PlaceService } from "./place/place.service";
+import { TripAccessService } from "./core/trip-access.service";
+import { TripRepository } from "./core/trip.repository";
+import { TripController } from "./trip/trip.controller";
+import { TripCrudService } from "./trip/trip-crud.service";
 
 @Module({
   imports: [AuthModule],
-  controllers: [TripController],
+  controllers: [TripController, PlaceController, ItineraryController],
   providers: [TripRepository, TripAccessService, TripCrudService, PlaceService, ItineraryService],
 })
 export class TripModule {}

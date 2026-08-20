@@ -1,6 +1,6 @@
 import { HttpStatus } from "@nestjs/common";
-import { Prisma } from "../generated/prisma-client";
-import { BusinessException } from "../common/exceptions/business.exception";
+import { Prisma } from "../../generated/prisma-client";
+import { BusinessException } from "../../common/exceptions/business.exception";
 import { ItineraryService } from "./itinerary.service";
 
 describe("ItineraryService (unit-ish with stub repository/access)", () => {

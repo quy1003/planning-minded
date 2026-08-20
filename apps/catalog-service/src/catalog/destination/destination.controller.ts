@@ -7,9 +7,9 @@ import {
   type ListDestinationsQuery,
   type UpdateDestinationInput,
 } from "@tripmind/shared";
-import { AdminGuard } from "../auth/guards/admin.guard";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
+import { AdminGuard } from "../../auth/guards/admin.guard";
+import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { DestinationService } from "./destination.service";
 
 /**
