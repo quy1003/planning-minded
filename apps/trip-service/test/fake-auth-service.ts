@@ -1,9 +1,10 @@
 import * as http from "node:http";
+import type { UserRole } from "@tripmind/shared";
 import { exportJWK, generateKeyPair, SignJWT, type KeyLike } from "jose";
 
 export type FakeAuthService = {
   url: string;
-  signAccessToken: (userId: string) => Promise<string>;
+  signAccessToken: (userId: string, role?: UserRole) => Promise<string>;
   close: () => Promise<void>;
 };
 
@@ -33,8 +34,8 @@ export async function startFakeAuthService(port: number): Promise<FakeAuthServic
 
   return {
     url: `http://localhost:${port}`,
-    signAccessToken: (userId: string) =>
-      new SignJWT({})
+    signAccessToken: (userId: string, role: UserRole = "USER") =>
+      new SignJWT({ role })
         .setProtectedHeader({ alg: "EdDSA", kid })
         .setSubject(userId)
         .setIssuedAt()

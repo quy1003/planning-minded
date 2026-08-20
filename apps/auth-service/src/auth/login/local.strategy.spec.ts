@@ -25,7 +25,7 @@ describe("LocalStrategy", () => {
   }
 
   it("returns AuthUser when credentials are valid", async () => {
-    const user = { id: "u1", email: "a@a.com", name: null };
+    const user = { id: "u1", email: "a@a.com", name: null, role: "USER" as const };
     validateUser.mockResolvedValue(user);
     const strategy = await createStrategy();
 

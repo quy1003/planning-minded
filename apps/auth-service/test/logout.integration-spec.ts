@@ -107,7 +107,7 @@ describe("POST /auth/logout, /auth/logout-all (integration)", () => {
       const tokenA2 = await refreshTokenService.issue(userId);
       const tokenOther = await refreshTokenService.issue(otherUserId);
 
-      const accessToken = await jwtService.signAccessToken(userId);
+      const accessToken = await jwtService.signAccessToken(userId, "USER");
       await request(server)
         .post("/v1/auth/logout-all")
         .set("Authorization", `Bearer ${accessToken}`)

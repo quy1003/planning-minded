@@ -1,4 +1,5 @@
 import { createParamDecorator, type ExecutionContext } from "@nestjs/common";
+import type { UserRole } from "@tripmind/shared";
 import type { Request } from "express";
 
 /** Shape user trả về sau khi verify password / tra DB (không gồm passwordHash). */
@@ -6,6 +7,7 @@ export type AuthUser = {
   id: string;
   email: string;
   name: string | null;
+  role: UserRole;
 };
 
 type RequestWithUser = Request & { user?: AuthUser };

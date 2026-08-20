@@ -59,7 +59,7 @@ describe("JwtAuthGuard (integration, qua GET /auth/me)", () => {
 
   it("returns 200 + user profile with a valid bearer token", async () => {
     const userId = await registerTestUser("jwt-guard-1@tripmind.test");
-    const token = await jwtService.signAccessToken(userId);
+    const token = await jwtService.signAccessToken(userId, "USER");
 
     const res = await request(server).get("/v1/auth/me").set("Authorization", `Bearer ${token}`).expect(200);
 
@@ -75,7 +75,7 @@ describe("JwtAuthGuard (integration, qua GET /auth/me)", () => {
 
   it("returns 401 with an expired token", async () => {
     const privateKey = await importJWK(configService.jwtPrivateJwk, "EdDSA");
-    const expiredToken = await new SignJWT({})
+    const expiredToken = await new SignJWT({ role: "USER" })
       .setProtectedHeader({ alg: "EdDSA", kid: configService.jwtKeyId })
       .setSubject("user-123")
       .setIssuedAt()
@@ -86,7 +86,7 @@ describe("JwtAuthGuard (integration, qua GET /auth/me)", () => {
   });
 
   it("returns 401 with a tampered token", async () => {
-    const token = await jwtService.signAccessToken("user-123");
+    const token = await jwtService.signAccessToken("user-123", "USER");
     const [header, payload, signature] = token.split(".");
     if (!header || !payload || !signature) {
       throw new Error("Token không đúng format header.payload.signature");

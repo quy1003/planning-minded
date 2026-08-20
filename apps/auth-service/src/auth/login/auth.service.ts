@@ -6,8 +6,8 @@ import { BusinessException } from "../../common/exceptions/business.exception";
 import { PrismaService } from "../../prisma/prisma.service";
 import { hashPassword, verifyPassword } from "./password.util";
 
-function toAuthUser(user: { id: string; email: string; name: string | null }): AuthUser {
-  return { id: user.id, email: user.email, name: user.name };
+function toAuthUser(user: { id: string; email: string; name: string | null; role: AuthUser["role"] }): AuthUser {
+  return { id: user.id, email: user.email, name: user.name, role: user.role };
 }
 
 @Injectable()
@@ -23,7 +23,7 @@ export class AuthService {
           passwordHash,
           name: input.name ?? null,
         },
-        select: { id: true, email: true, name: true },
+        select: { id: true, email: true, name: true, role: true },
       });
       return toAuthUser(user);
     } catch (error: unknown) {
@@ -53,7 +53,7 @@ export class AuthService {
   async findById(id: string): Promise<AuthUser | null> {
     const user = await this.prisma.user.findUnique({
       where: { id },
-      select: { id: true, email: true, name: true },
+      select: { id: true, email: true, name: true, role: true },
     });
     return user ? toAuthUser(user) : null;
   }

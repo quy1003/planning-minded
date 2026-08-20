@@ -23,14 +23,15 @@ Tôi (chủ repo) trình độ **junior**. Claude Code đóng vai trò **lập t
 Phase 1 (CRUD trip thủ công + auth session) xong. Phase 2 (JWT/EdDSA, JWKS, refresh rotation,
 revocation, rate limit, tách `auth-service`) xong 7/7 task — xem `docs/learning/36-phase2-index.md`.
 Phase 3 đang làm theo `docs/learning/46-phase3-index.md` — task #1 (route `/api/v1/*`, NestJS URI
-versioning) và #2 (tách `trip-service`) đã xong. `apps/api` giờ chỉ còn `catalog/` (placeholder
-rỗng) + `JwtAuthGuard` — dự kiến bị xoá hẳn sau task #3 (xây `catalog-service` mới). **Chưa** có
-`api-gateway`/gRPC/RabbitMQ/database-per-service thật — đó là các task #3-#8 còn lại của Phase 3.
-Đừng nhảy task khi task hiện tại (theo thứ tự trong `46-phase3-index.md`) chưa xong.
+versioning), #2 (tách `trip-service`) và #3 (xây `catalog-service` mới, thêm `role` vào JWT
+claims) đã xong. `apps/api` giờ **thật sự rỗng** (chỉ còn `catalog/` placeholder + `JwtAuthGuard`
+không route nào dùng) — cân nhắc xoá hẳn, cần hỏi trước khi làm. **Chưa** có `api-gateway`/gRPC/
+RabbitMQ/database-per-service thật — đó là các task #4-#8 còn lại của Phase 3. Đừng nhảy task khi
+task hiện tại (theo thứ tự trong `46-phase3-index.md`) chưa xong.
 
 ## Commands
 ```bash
-pnpm dev                     # chạy 4 app: api (:3000), web (:3001), auth-service (:3002), trip-service (:3004) — turbo
+pnpm dev                     # chạy 5 app: api (:3000), web (:3001), auth-service (:3002), trip-service (:3004), catalog-service (:3006) — turbo
 pnpm test                    # unit tests
 pnpm lint && pnpm typecheck
 docker compose -f infra/docker-compose.yml up -d   # postgres + redis
@@ -38,20 +39,29 @@ pnpm --filter @tripmind/api <cmd>                   # chạy riêng 1 app (đổ
 ```
 
 ## Cấu trúc
-`apps/api` = NestJS, chỉ còn `catalog/` (rỗng, chờ task #3 Phase 3) + `JwtAuthGuard` để verify JWT
-qua JWKS (module `auth/` đã tách sang `apps/auth-service` task #7 Phase 2, module `trip/` đã tách
-sang `apps/trip-service` task #2 Phase 3). `apps/auth-service` = NestJS riêng, giữ private key JWT,
-đăng ký/đăng nhập/refresh/revoke/rate-limit. `apps/trip-service` = NestJS riêng, CRUD trip/places/
-itinerary, chỉ giữ `JwtAuthGuard` để verify (giống `apps/api`). `apps/web` (Next.js) — rewrite
-`/api/v1/auth/*` sang `auth-service`, `/api/v1/trips/*` sang `trip-service`, `/api/v1/*` còn lại
-sang `apps/api`. `v1` là NestJS URI versioning thật (`app.enableVersioning(...)` trong
-`bootstrap/configure-app.ts` mỗi service), không phải string tự quản ở tầng rewrite — xem
-`docs/learning/47-api-versioning.md`. `packages/shared` = DTOs, zod schemas, event contracts —
-**mọi contract liên module phải khai báo ở đây**, không duplicate. `packages/config` =
-tsconfig/eslint/prettier dùng chung. Mỗi app Prisma generate Client vào `src/generated/prisma-client`
-riêng (không dùng vị trí mặc định — tránh nhiều app dedupe đè lên nhau qua pnpm, xem
-`docs/adr/008-auth-service-extraction.md`). Mọi service hiện vẫn dùng CHUNG 1 Postgres (chỉ tách
-quyền sở hữu schema, chưa tách DB vật lý — xem `docs/learning/48-trip-service-extraction.md`).
+`apps/api` = NestJS, chỉ còn `catalog/` (rỗng, không dùng — logic catalog thật nằm ở
+`apps/catalog-service`) + `JwtAuthGuard` (module `auth/` đã tách sang `apps/auth-service` task #7
+Phase 2, module `trip/` đã tách sang `apps/trip-service` task #2 Phase 3). `apps/auth-service` =
+NestJS riêng, giữ private key JWT, đăng ký/đăng nhập/refresh/revoke/rate-limit, sở hữu `User`
+(field `role: USER|ADMIN`, mint vào JWT claim — task #3 Phase 3). `apps/trip-service` = NestJS
+riêng, CRUD trip/places/itinerary. `apps/catalog-service` = NestJS riêng, CRUD
+`Destination`/`Poi` — public read (`GET`), admin-only mutation (`@UseGuards(JwtAuthGuard,
+AdminGuard)`, `AdminGuard` check `request.jwtUser.role === "ADMIN"`). Cả 3 service verify (không
+tự ký) đều dùng `JwtAuthGuard` — duplicate code (không import chung), copy tay khi thêm service
+mới, đọc claim `role` gán `request.jwtUser = { id, role }`. `apps/web` (Next.js) — rewrite
+`/api/v1/auth/*` → `auth-service`, `/api/v1/trips/*` → `trip-service`, `/api/v1/destinations/*` →
+`catalog-service`, `/api/v1/*` còn lại → `apps/api`. `v1` là NestJS URI versioning thật
+(`app.enableVersioning(...)` trong `bootstrap/configure-app.ts` mỗi service), không phải string
+tự quản ở tầng rewrite — xem `docs/learning/47-api-versioning.md`. `packages/shared` = DTOs, zod
+schemas, event contracts, `UserRole` — **mọi contract liên module phải khai báo ở đây**, không
+duplicate. `packages/config` = tsconfig/eslint/prettier dùng chung. Mỗi app Prisma generate
+Client vào `src/generated/prisma-client` riêng (không dùng vị trí mặc định — tránh nhiều app
+dedupe đè lên nhau qua pnpm, xem `docs/adr/008-auth-service-extraction.md`). Mọi service hiện vẫn
+dùng CHUNG 1 Postgres (chỉ tách quyền sở hữu schema, chưa tách DB vật lý — xem
+`docs/learning/48-trip-service-extraction.md`). Migration trên DB share nhiều service **không
+được** chạy `prisma migrate dev` trực tiếp (Prisma coi bảng của service khác là "drift") — luôn
+qua `prisma migrate diff` sinh SQL thủ công rồi `db execute` + `migrate resolve --applied`, xem
+`docs/adr/010-trip-service-extraction.md` và `docs/adr/011-catalog-service-and-role.md`.
 
 ## Conventions
 - TypeScript strict, không `any` (dùng `unknown` + narrow).

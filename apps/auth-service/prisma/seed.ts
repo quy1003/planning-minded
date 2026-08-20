@@ -22,8 +22,21 @@ async function main() {
       name: "Demo User",
     },
   });
-
   console.log(`Seeded user: ${user.email} (${user.id})`);
+
+  // Phase 3 task #3: user role ADMIN để test route quản trị catalog-service
+  // (destinations/pois) — chỉ dùng local, không seed lên production.
+  const admin = await prisma.user.upsert({
+    where: { email: "admin@tripmind.local" },
+    update: { passwordHash, role: "ADMIN" },
+    create: {
+      email: "admin@tripmind.local",
+      passwordHash,
+      name: "Admin User",
+      role: "ADMIN",
+    },
+  });
+  console.log(`Seeded admin: ${admin.email} (${admin.id})`);
   console.log(`Demo password: ${DEMO_PASSWORD}`);
 }
 

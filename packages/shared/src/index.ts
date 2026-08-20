@@ -2,6 +2,24 @@
 // Mọi contract liên module/service phải khai báo ở đây — không duplicate (xem docs/05-CLAUDE.md).
 
 export { registerSchema, loginSchema, type RegisterInput, type LoginInput } from "./auth/schemas";
+export { userRoleSchema, type UserRole } from "./auth/role";
+
+export { moneySchema } from "./common/schemas";
+
+export {
+  createDestinationSchema,
+  updateDestinationSchema,
+  listDestinationsQuerySchema,
+  poiCategorySchema,
+  createPoiSchema,
+  updatePoiSchema,
+  type CreateDestinationInput,
+  type UpdateDestinationInput,
+  type ListDestinationsQuery,
+  type PoiCategory,
+  type CreatePoiInput,
+  type UpdatePoiInput,
+} from "./catalog/schemas";
 
 export {
   tripStatusSchema,

@@ -44,7 +44,7 @@ export class AuthController {
 
   /** Ký access token + issue refresh token (cookie) — dùng chung cho register và login. */
   private async issueTokens(user: AuthUser, res: Response): Promise<AuthTokenResponse> {
-    const accessToken = await this.jwtService.signAccessToken(user.id);
+    const accessToken = await this.jwtService.signAccessToken(user.id, user.role);
     const refreshToken = await this.refreshTokenService.issue(user.id);
     setRefreshTokenCookie(res, refreshToken, this.configService);
     return { accessToken, user };
@@ -100,7 +100,14 @@ export class AuthController {
 
     const { userId, newToken } = await this.refreshTokenService.rotate(oldRefreshToken);
     setRefreshTokenCookie(res, newToken, this.configService);
-    const accessToken = await this.jwtService.signAccessToken(userId);
+
+    // Tra lại role hiện tại (không lấy từ claim cũ) — nếu role đổi từ lúc login, access token
+    // mới phải phản ánh đúng quyền hiện tại, không phải quyền lúc login lần đầu.
+    const user = await this.authService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException({ detail: "User not found" });
+    }
+    const accessToken = await this.jwtService.signAccessToken(userId, user.role);
     return { accessToken };
   }
 

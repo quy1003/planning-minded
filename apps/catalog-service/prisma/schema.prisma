@@ -1,0 +1,63 @@
+// apps/catalog-service/prisma/schema.prisma
+// Phase 3 task #3: catalog-service viết MỚI hoàn toàn (không phải tách — trước đó
+// apps/api/src/catalog/ chỉ là module rỗng, chưa có model gì). Schema thiết kế sẵn từ
+// trước trong docs/06-database-schema.md, copy nguyên — xem docs/learning/49-catalog-service.md.
+// Vẫn dùng CHUNG 1 Postgres với các service khác (quyết định đã chốt ở
+// docs/learning/46-phase3-index.md — chưa tách DB vật lý), nhưng 2 bảng destinations/pois là
+// MỚI hoàn toàn (không tồn tại sẵn trong DB) nên migration đầu tiên chạy `migrate dev` bình
+// thường — KHÔNG cần baseline như trip-service/auth-service (những service tách từ bảng đã có
+// sẵn).
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Destination {
+  id          String   @id @default(uuid())
+  name        String   @unique // "Đà Lạt"
+  region      String // "Tây Nguyên"
+  description String
+  lat         Decimal  @db.Decimal(9, 6) // tâm điểm đến, để center map
+  lng         Decimal  @db.Decimal(9, 6)
+  bestSeasons String[] // ["11-03"]
+  tags        String[] // ["núi", "lãng mạn", "mát mẻ"]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  pois Poi[]
+
+  @@index([region])
+  @@index([tags])
+  @@map("destinations")
+}
+
+model Poi {
+  id            String      @id @default(uuid())
+  destinationId String
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  name          String // "Chợ đêm Đà Lạt"
+  address       String?
+  lat           Decimal     @db.Decimal(9, 6) // NGUỒN SỰ THẬT tọa độ toàn hệ thống
+  lng           Decimal     @db.Decimal(9, 6)
+  category      String // food | sightseeing | activity | accommodation | transport
+  description   String
+  estCostMin    Decimal     @db.Decimal(12, 2)
+  estCostMax    Decimal     @db.Decimal(12, 2)
+  avgDurationMin Int
+  openingHours  Json? // {"mon":[["08:00","22:00"]],...}
+  tags          String[]
+  kidFriendly   Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([destinationId, name])
+  @@index([destinationId, category])
+  @@index([tags])
+  @@map("pois")
+}

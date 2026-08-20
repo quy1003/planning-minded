@@ -17,6 +17,7 @@ import createNextIntlPlugin from "next-intl/plugin";
 const apiInternalUrl = process.env.API_INTERNAL_URL ?? "http://localhost:3000";
 const authServiceInternalUrl = process.env.AUTH_SERVICE_INTERNAL_URL ?? "http://localhost:3002";
 const tripServiceInternalUrl = process.env.TRIP_SERVICE_INTERNAL_URL ?? "http://localhost:3004";
+const catalogServiceInternalUrl = process.env.CATALOG_SERVICE_INTERNAL_URL ?? "http://localhost:3006";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@tripmind/shared"],
@@ -31,6 +32,10 @@ const nextConfig: NextConfig = {
       {
         source: "/api/v1/trips/:path*",
         destination: `${tripServiceInternalUrl}/v1/trips/:path*`,
+      },
+      {
+        source: "/api/v1/destinations/:path*",
+        destination: `${catalogServiceInternalUrl}/v1/destinations/:path*`,
       },
       {
         source: "/api/v1/:path*",

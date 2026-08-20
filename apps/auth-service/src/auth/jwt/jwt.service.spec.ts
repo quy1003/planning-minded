@@ -45,17 +45,18 @@ describe("JwtService", () => {
     jwtService = moduleRef.get(JwtService);
   });
 
-  it("ký token rồi verify lại đúng sub", async () => {
-    const token = await jwtService.signAccessToken("user-1");
+  it("ký token rồi verify lại đúng sub + role", async () => {
+    const token = await jwtService.signAccessToken("user-1", "ADMIN");
 
     const claims = await jwtService.verifyAccessToken(token);
 
     expect(claims.sub).toBe("user-1");
+    expect(claims.role).toBe("ADMIN");
   });
 
   it("verify token đã hết hạn phải throw", async () => {
     const privateKey = await importJWK(testPrivateJwk, "EdDSA");
-    const expiredToken = await new SignJWT({})
+    const expiredToken = await new SignJWT({ role: "USER" })
       .setProtectedHeader({ alg: "EdDSA", kid: testPrivateJwk.kid })
       .setSubject("user-1")
       .setIssuedAt()
@@ -66,7 +67,7 @@ describe("JwtService", () => {
   });
 
   it("sửa 1 ký tự trong chữ ký thì verify phải fail (chống giả mạo)", async () => {
-    const token = await jwtService.signAccessToken("user-1");
+    const token = await jwtService.signAccessToken("user-1", "USER");
     const [header, payload, signature] = token.split(".");
     if (!header || !payload || !signature) {
       throw new Error("Token ký ra không đúng format header.payload.signature");
