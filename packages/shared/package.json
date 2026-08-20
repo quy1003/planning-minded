@@ -10,11 +10,15 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@nestjs/common": "^11.0.1",
+    "jose": "^4.15.9",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@tripmind/config": "workspace:*",
+    "@types/express": "^5.0.6",
     "eslint": "^9.17.0",
+    "reflect-metadata": "^0.2.2",
     "typescript": "^5.7.2"
   }
 }

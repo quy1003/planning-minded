@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import {
   createDestinationSchema,
+  JwtAuthGuard,
   listDestinationsQuerySchema,
   updateDestinationSchema,
   type CreateDestinationInput,
@@ -8,7 +9,6 @@ import {
   type UpdateDestinationInput,
 } from "@tripmind/shared";
 import { AdminGuard } from "../../auth/guards/admin.guard";
-import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { DestinationService } from "./destination.service";
 

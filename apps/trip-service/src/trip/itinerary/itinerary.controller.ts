@@ -1,13 +1,13 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from "@nestjs/common";
 import {
   createItineraryItemSchema,
+  JwtAuthGuard,
   reorderItinerarySchema,
   updateItineraryItemSchema,
   type CreateItineraryItemInput,
   type ReorderItineraryInput,
   type UpdateItineraryItemInput,
 } from "@tripmind/shared";
-import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { CurrentUserId } from "../../common/decorators/current-user-id.decorator";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { ItineraryService } from "./itinerary.service";

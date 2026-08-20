@@ -10,13 +10,12 @@ import {
   UnauthorizedException,
   UseGuards,
 } from "@nestjs/common";
-import { registerSchema, type RegisterInput } from "@tripmind/shared";
+import { JwtAuthGuard, registerSchema, type RegisterInput } from "@tripmind/shared";
 import type { Request, Response } from "express";
 import { CurrentUser, type AuthUser } from "../common/decorators/current-user.decorator";
 import { CurrentUserId } from "../common/decorators/current-user-id.decorator";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
 import { ConfigService } from "../config/config.service";
-import { JwtAuthGuard } from "./jwt/jwt-auth.guard";
 import { JwtService } from "./jwt/jwt.service";
 import { AuthService } from "./login/auth.service";
 import { LocalAuthGuard } from "./login/local-auth.guard";

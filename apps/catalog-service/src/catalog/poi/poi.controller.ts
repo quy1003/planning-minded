@@ -1,12 +1,12 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from "@nestjs/common";
 import {
   createPoiSchema,
+  JwtAuthGuard,
   updatePoiSchema,
   type CreatePoiInput,
   type UpdatePoiInput,
 } from "@tripmind/shared";
 import { AdminGuard } from "../../auth/guards/admin.guard";
-import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { PoiService } from "./poi.service";
 

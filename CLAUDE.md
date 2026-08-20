@@ -52,8 +52,12 @@ refresh/revoke/rate-limit, sở hữu `User` (field `role: USER|ADMIN`, mint và
 Phase 3). `apps/trip-service` = NestJS riêng, CRUD trip/places/itinerary. `apps/catalog-service` =
 NestJS riêng, CRUD `Destination`/`Poi` — public read (`GET`), admin-only mutation
 (`@UseGuards(JwtAuthGuard, AdminGuard)`, `AdminGuard` check `request.jwtUser.role === "ADMIN"`).
-Cả 4 service verify (không tự ký) đều dùng `JwtAuthGuard` — duplicate code (không import chung),
-copy tay khi thêm service mới, đọc claim `role` gán `request.jwtUser = { id, role }`. `apps/web`
+Cả 4 service verify (không tự ký) đều dùng chung `JwtAuthGuard` **từ `packages/shared`**
+(không còn duplicate 5 bản như trước Phase 3 task #5 — xem `docs/adr/013-shared-jwt-auth-guard.md`),
+đọc claim `role` gán `request.jwtUser = { id, role }`. Mỗi app tự provide token `JWKS_URL`
+(từ `ConfigService` riêng) trong `auth.module.ts` của mình — **PHẢI export cả `JWKS_URL` lẫn
+`JwtAuthGuard`** (thiếu `JWKS_URL` thì module khác import `AuthModule` vẫn build sạch nhưng
+lỗi DI lúc chạy thật, chỉ integration test bắt được). `apps/web`
 (Next.js) — CHỈ 1 rule rewrite `/api/v1/*` → `api-gateway` (routing table auth/trips/destinations
 sống trong gateway, không phải `apps/web` nữa). `v1` là NestJS URI versioning thật
 (`app.enableVersioning(...)` trong `bootstrap/configure-app.ts` mỗi service — riêng `api-gateway`

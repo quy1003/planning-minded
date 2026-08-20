@@ -1,6 +1,6 @@
 import { All, Controller, Req, Res, UseGuards } from "@nestjs/common";
+import { JwtAuthGuard } from "@tripmind/shared";
 import type { Request, Response } from "express";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { SkipResponseTransform } from "../common/decorators/skip-response-transform.decorator";
 import { ConfigService } from "../config/config.service";
 import { ProxyService } from "./proxy.service";

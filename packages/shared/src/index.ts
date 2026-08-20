@@ -3,6 +3,7 @@
 
 export { registerSchema, loginSchema, type RegisterInput, type LoginInput } from "./auth/schemas";
 export { userRoleSchema, type UserRole } from "./auth/role";
+export { JwtAuthGuard, JWKS_URL } from "./auth/jwt-auth.guard";
 
 export { moneySchema } from "./common/schemas";
 
